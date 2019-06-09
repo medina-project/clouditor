@@ -31,4 +31,5 @@ include 'clouditor-engine',
         'clouditor-engine-core',
         'clouditor-engine-azure',
         'clouditor-engine-aws',
+        'clouditor-engine-eu-sec',
         'clouditor-ui'

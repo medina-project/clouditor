@@ -1,0 +1,6 @@
+name: "Location"
+description: "Storage objects should be located within the European Union."
+condition: 'StorageObject has location.countryCode within "de", "es", "at"'
+icon: "fas fa-location-arrow"
+controls:
+  - "Cloud Control Matrix/GRM-02"

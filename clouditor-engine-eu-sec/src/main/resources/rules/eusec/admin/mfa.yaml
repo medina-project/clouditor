@@ -1,0 +1,6 @@
+name: "Multi-Factor Authentication"
+description: "All administrators should enable strong authenticators, such as MFA."
+icon: "fas fa-mobile-alt"
+condition: Administrator has authenticator.type == "TWOFACTOR"
+controls:
+  - "Cloud Control Matrix/IAM-12"

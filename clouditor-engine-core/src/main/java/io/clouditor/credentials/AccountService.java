@@ -66,6 +66,11 @@ public class AccountService {
         case "Azure":
           c = Class.forName("io.clouditor.credentials.AzureAccount");
           break;
+
+        case "STARWatch":
+          c = Class.forName("io.clouditor.credentials.STARWatchAccount");
+          break;
+
         default:
           throw new IOException("Provider not supported");
       }

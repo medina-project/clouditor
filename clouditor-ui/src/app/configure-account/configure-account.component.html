@@ -43,8 +43,7 @@ variables or meta-data services. Alternatively, credentials can be entered manua
     <div class="card" [class.border-info]="account.autoDiscovered === true">
       <div class="card-header">
         <label class="p-0 m-0"><input type="radio" name="autoDiscovered" class="mr-2"
-                                      [(ngModel)]="account.autoDiscovered" [value]="true"
-                                      [disabled]="!discoveredAccount"/>Auto-Discovered
+            [(ngModel)]="account.autoDiscovered" [value]="true" [disabled]="!discoveredAccount" />Auto-Discovered
           Credentials</label>
       </div>
       <div class="card-body" *ngIf="discoveryComplete === false; else discoveryIsComplete">
@@ -74,55 +73,50 @@ variables or meta-data services. Alternatively, credentials can be entered manua
   <div class="col-6">
     <div class="card" [class.border-info]="account.autoDiscovered !== true">
       <div class="card-header">
-        <label class="p-0 m-0"><input type="radio" name="autoDiscovered"
-                                      [(ngModel)]="account.autoDiscovered"
-                                      class="mr-2" [value]="false"/>Provide Credentials
+        <label class="p-0 m-0"><input type="radio" name="autoDiscovered" [(ngModel)]="account.autoDiscovered"
+            class="mr-2" [value]="false" />Provide Credentials
           Manually</label>
       </div>
-      <div class="card-body" *ngIf="provider === 'AWS'; else azureConfig">
-        <div class="form-group row">
-          <label for="accessKeyId" class="col-sm-4 col-form-label">Access Key Id</label>
-          <div class="col-sm-8">
-            <input class="form-control" name="accessKeyId" #accessKeyId="ngModel"
-                   [(ngModel)]="account.accessKeyId"
-                   placeholder="Enter your access key id" id="accessKeyId" required/>
+      <ng-container *ngIf="provider === 'AWS'">
+        <div class="card-body">
+          <div class="form-group row">
+            <label for="accessKeyId" class="col-sm-4 col-form-label">Access Key Id</label>
+            <div class="col-sm-8">
+              <input class="form-control" name="accessKeyId" #accessKeyId="ngModel" [(ngModel)]="account.accessKeyId"
+                placeholder="Enter your access key id" id="accessKeyId" required />
+            </div>
+          </div>
+          <div class="form-group row">
+            <label for="secretAccessKey" class="col-sm-4 col-form-label">Secret Access Key</label>
+            <div class="col-sm-8">
+              <input class="form-control" type="password" name="secretAccessKey" #secretAccessKey="ngModel"
+                [(ngModel)]="account.secretAccessKey" placeholder="Enter your secret access key" id="secretAccessKey"
+                required />
+            </div>
+          </div>
+          <div class="form-group row">
+            <label for="region" class="col-sm-4 col-form-label">Region</label>
+            <div class="col-sm-8">
+              <input class="form-control" name="name" #region="ngModel" [(ngModel)]="account.region"
+                placeholder="Enter the region" id="region" required />
+            </div>
           </div>
         </div>
-        <div class="form-group row">
-          <label for="secretAccessKey" class="col-sm-4 col-form-label">Secret Access Key</label>
-          <div class="col-sm-8">
-            <input class="form-control" type="password" name="secretAccessKey"
-                   #secretAccessKey="ngModel"
-                   [(ngModel)]="account.secretAccessKey" placeholder="Enter your secret access key"
-                   id="secretAccessKey"
-                   required/>
-          </div>
-        </div>
-        <div class="form-group row">
-          <label for="region" class="col-sm-4 col-form-label">Region</label>
-          <div class="col-sm-8">
-            <input class="form-control" name="name" #region="ngModel" [(ngModel)]="account.region"
-                   placeholder="Enter the region" id="region" required/>
-          </div>
-        </div>
-      </div>
-      <ng-template #azureConfig>
+      </ng-container>
+      <ng-container *ngIf="provider === 'Azure'">
         <div class="card-body">
           <div class="form-group row">
             <label for="clientId" class="col-sm-4 col-form-label">Client ID</label>
             <div class="col-sm-8">
-              <input class="form-control" name="clientId" #accessKeyId="ngModel"
-                     [(ngModel)]="account.clientId"
-                     placeholder="Enter your client Id" id="clientId" required/>
+              <input class="form-control" name="clientId" #accessKeyId="ngModel" [(ngModel)]="account.clientId"
+                placeholder="Enter your client Id" id="clientId" required />
             </div>
           </div>
           <div class="form-group row">
             <label for="clientSecret" class="col-sm-4 col-form-label">Client Secret</label>
             <div class="col-sm-8">
-              <input class="form-control" type="password" name="clientSecret"
-                     #secretAccessKey="ngModel"
-                     [(ngModel)]="account.clientSecret" placeholder="Enter your client secret"
-                     id="clientSecret" required/>
+              <input class="form-control" type="password" name="clientSecret" #secretAccessKey="ngModel"
+                [(ngModel)]="account.clientSecret" placeholder="Enter your client secret" id="clientSecret" required />
             </div>
           </div>
           <!--<div class="form-group row">
@@ -135,19 +129,62 @@ variables or meta-data services. Alternatively, credentials can be entered manua
           <div class="form-group row">
             <label for="tenantId" class="col-sm-4 col-form-label">Tenant ID</label>
             <div class="col-sm-8">
-              <input class="form-control" name="name" #region="ngModel"
-                     [(ngModel)]="account.tenantId"
-                     placeholder="Enter the tenant id" id="tenantId" required/>
+              <input class="form-control" name="name" #region="ngModel" [(ngModel)]="account.tenantId"
+                placeholder="Enter the tenant id" id="tenantId" required />
             </div>
           </div>
         </div>
-      </ng-template>
+      </ng-container>
+      <ng-container *ngIf="provider === 'EU-SEC Audit API'">
+        <div class="card-body">
+          <div class="form-group row">
+            <label for="clientId" class="col-sm-4 col-form-label">URL</label>
+            <div class="col-sm-8">
+              <input class="form-control" name="url" #accessKeyId="ngModel" [(ngModel)]="account.url"
+                placeholder="Enter your url" id="url" required />
+            </div>
+          </div>
+          <div class="form-group row">
+            <label for="clientId" class="col-sm-4 col-form-label">Username</label>
+            <div class="col-sm-8">
+              <input class="form-control" name="user" #accessKeyId="ngModel" [(ngModel)]="account.user"
+                placeholder="Enter your user (if basic authentication is used)" id="user" />
+            </div>
+          </div>
+          <div class="form-group row">
+            <label for="clientId" class="col-sm-4 col-form-label">Password</label>
+            <div class="col-sm-8">
+              <input class="form-control" type="password" name="password" #accessKeyId="ngModel"
+                [(ngModel)]="account.password" placeholder="Enter your password (if basic authentication is used)"
+                id="password" />
+            </div>
+          </div>
+        </div>
+      </ng-container>
+      <ng-container *ngIf="provider === 'STARWatch'">
+        <div class="card-body">
+          <div class="form-group row">
+            <label for="clientId" class="col-sm-4 col-form-label">URL</label>
+            <div class="col-sm-8">
+              <input class="form-control" name="url" #accessKeyId="ngModel" [(ngModel)]="account.url"
+                placeholder="Enter your url" id="url" required />
+            </div>
+          </div>
+          <div class="form-group row">
+            <label for="clientId" class="col-sm-4 col-form-label">Token</label>
+            <div class="col-sm-8">
+              <input class="form-control" name="token" #accessKeyId="ngModel" [(ngModel)]="account.token"
+                placeholder="Enter your token" id="token" required />
+            </div>
+          </div>
+        </div>
+      </ng-container>
     </div>
   </div>
 </div>
 
 <button (click)="save()" class="btn btn-outline-secondary mt-4"
-        [disabled]="account.autoDiscovered && !discoveryComplete"><i class="fas fa-save"></i>
+  [disabled]="account.autoDiscovered && !discoveryComplete"><i class="fas fa-save"></i>
   Save
 </button>
 
@@ -158,15 +195,14 @@ variables or meta-data services. Alternatively, credentials can be entered manua
   policy called <code>SecurityAudit</code>.
   <ul>
     <li>Go to <a href="https://console.aws.amazon.com/iam/home?#/users$new?step=details"
-                 target="_new">https://console.aws.amazon.com/iam/home?#/users$new?step=details</a>
+        target="_new">https://console.aws.amazon.com/iam/home?#/users$new?step=details</a>
       to create a new user.</li>
     <li>After specifying a user name, such as <code>clouditor</code>, enable <code>Programmatic access</code>.</li>
     <li>In the next screen, either choose an appropriate group or choose <code>Attach existing policies directly</code>.
       Enable the <code>SecurityAudit</code> policy.</li>
     <li>After creating the user, the IAM console presents you the <code>Access key ID</code> and
       <code>Secret access key</code> of the user. Enter them directly above or store them in an appropriate file in the
-      default credential chain (See <a
-        href="https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html"
+      default credential chain (See <a href="https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html"
         target="_new">https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html</a>).
     </li>
   </ul>
@@ -193,7 +229,7 @@ variables or meta-data services. Alternatively, credentials can be entered manua
       Alternatively, the application can be created via the Azure portal:
       <ol>
         <li>In order to create an appropriate application, login to your Azure portal (<a
-          href="https://portal.azure.com/">https://portal.azure.com/</a>) and go to
+            href="https://portal.azure.com/">https://portal.azure.com/</a>) and go to
           <code>Azure Active Directory</code>
           <code>App registrations</code> and click on
           <code>New registrations</code>.

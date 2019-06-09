@@ -46,6 +46,8 @@ jobs:
   build_only:
     docker:
       - image: circleci/openjdk:11
+    environment:
+      GRADLE_OPTS: -Xmx2048m -Dorg.gradle.daemon=false
     steps:
       - build
   build_and_push:
@@ -66,6 +68,29 @@ jobs:
             docker tag clouditor/clouditor clouditor/clouditor:$CIRCLE_TAG
       - push:
           tag: $CIRCLE_TAG
+  build_and_push_eusec:
+    docker:
+      - image: circleci/openjdk:11
+    steps:
+      - build
+      - run:
+          name: Save test results
+          command: |
+            mkdir -p ~/test-results/junit/
+            find . -type f -regex ".*/build/test-results/.*xml" -exec cp {} ~/test-results/junit/ \;
+          when: always
+      - store_test_results:
+          path: ~/test-results
+      - store_artifacts:
+          path: ~/test-results/junit
+      - run:
+          name: Tag EU-SEC Pilot Build
+          command: |
+            docker tag clouditor/clouditor clouditor/clouditor:eu-sec
+      - docker/check
+      - docker/push:
+          image: clouditor/clouditor
+          tag: eu-sec
 workflows:
   build:
     jobs:
@@ -86,3 +111,9 @@ workflows:
               only: /^v.*/
             branches:
               ignore: /.*/
+      - build_and_push_eusec:
+          context: org-global
+          filters:
+            branches:
+              only:
+                - eu-sec

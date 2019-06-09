@@ -64,7 +64,7 @@ The following accounts are configured to be continuously scanned by Clouditor.
   <div class="col-6">
     <div class="card">
       <div class="card-body" style="text-align: center">
-        <i class="azure big-icon fab fa-windows"></i>
+        <i class="azure big-icon fab fa-windows mb-4"></i>
         <div *ngIf="!accounts.get('Azure'); else azureConfigured">
           <div>Not configured yet.</div>
         </div>
@@ -91,13 +91,41 @@ The following accounts are configured to be continuously scanned by Clouditor.
   <div class="col-6">
     <div class="card">
       <div class="card-body" style="text-align: center">
-        <i class="salesforce big-icon fab fa-salesforce"></i>
-
-        <div class="mt-2">Not supported yet. Coming soon.</div>
-
-        <button class="btn btn-outline-secondary mt-4" disabled><i class="fas fa-cogs"></i>
-          Configure
-        </button>
+        <i class="eu-sec big-icon fas fa-shield-alt mb-4"></i>
+        <div *ngIf="!accounts.get('EU-SEC Audit API'); else euSecConfigured">
+          <div>Not configured yet.</div>
+        </div>
+        <ng-template #euSecConfigured>
+          <div>Clouditor is configured to use the {{ accounts.get('EU-SEC Audit API').provider }} at
+            <b>{{ accounts.get('EU-SEC Audit API').url }}</b> with the user
+            <b>{{ accounts.get('EU-SEC Audit API').user }}</b>.
+            <span *ngIf="accounts.get('EU-SEC Audit API').autoDiscovered">It uses the default credentials
+              chain.</span>
+          </div>
+        </ng-template>
+        <a [routerLink]="['/accounts', 'configure', 'EU-SEC Audit API']"><button
+            class="btn btn-outline-secondary mt-4"><i class="fas fa-cogs"></i> Configure</button></a>
+      </div>
+    </div>
+  </div>
+  <div class="col-6">
+    <div class="card">
+      <div class="card-body" style="text-align: center">
+        <img class="star-watch-icon mb-4"
+          src="https://star.watch/assets/starwatch/logo-ff85263fb47cc2e79fb942a72061d23b0044418daea8c768a4d6823eee0cddcf.png">
+        <div *ngIf="!accounts.get('STARWatch'); else starWatchConfigured">
+          <div>Not configured yet.</div>
+        </div>
+        <ng-template #starWatchConfigured>
+          <div>Clouditor is configured to use the {{ accounts.get('STARWatch').provider }} at
+            <b>{{ accounts.get('STARWatch').url }}</b> with the assessment id
+            <b>{{ accounts.get('STARWatch').assessmentId }}</b>.
+            <span *ngIf="accounts.get('STARWatch').autoDiscovered">It uses the default credentials
+              chain.</span>
+          </div>
+        </ng-template>
+        <a [routerLink]="['/accounts', 'configure', 'STARWatch']"><button class="btn btn-outline-secondary mt-4"><i
+              class="fas fa-cogs"></i> Configure</button></a>
       </div>
     </div>
   </div>
