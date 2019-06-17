@@ -6,6 +6,7 @@ import io.clouditor.auth.LoginResponse;
 import io.clouditor.auth.User;
 import io.clouditor.util.PersistenceManager;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Base64;
 import javax.inject.Inject;
 import javax.ws.rs.GET;
@@ -18,6 +19,7 @@ import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,7 +62,45 @@ public class OAuthResource {
       @QueryParam("scope") String scope,
       @QueryParam("state") String state,
       @Context ContainerRequestContext context) {
-    // TODO: authorize
+
+    // TODO: check response type (only code?)
+
+    // check, if clientId is empty
+    if (clientId == null || clientId.isBlank()) {
+      // TODO: what kind of error?
+      return Response.status(Status.BAD_REQUEST).build();
+    }
+
+    // check, if clientId is in the database
+    var client = this.service.getClient(clientId);
+    if (client == null) {
+      // TODO: what kind of error?
+      return Response.status(Status.BAD_REQUEST).build();
+    }
+
+    // check, if redirectUri is empty
+    // TODO: do we need to allow empty redirect urls for device code?
+    if (redirectUri == null || redirectUri.isBlank()) {
+      // TODO: what kind of error?
+      return Response.status(Status.BAD_REQUEST).build();
+    }
+
+    // check, if redirectUri is a valid URI
+    try {
+      var url = new URI(redirectUri);
+    } catch (URISyntaxException e) {
+      // TODO: what kind of error?
+      return Response.status(Status.BAD_REQUEST).build();
+    }
+
+    if (!client.getRedirectUrls().contains(redirectUri)) {
+      // TODO: what kind of error?
+      return Response.status(Status.BAD_REQUEST).build();
+    }
+
+    // TODO: do we need scopes?
+
+    // TODO: reject, if state is empty?
 
     LOGGER.info(
         "Got OAuth 2.0 authorize call with response_type={}, client_id={}, redirect_uri={}, scope={}, state={}",
@@ -69,6 +109,21 @@ public class OAuthResource {
         redirectUri,
         scope,
         state);
+
+    // TODO: check cookie or redirect to login page
+    return Response.temporaryRedirect(URI.create("/#?login")).build();
+  }
+
+  @GET
+  @Path("token")
+  public Response token(
+      @QueryParam("grant_type") String grantType,
+      @QueryParam("code") String code,
+      @QueryParam("redirect_uri") String redirectUri,
+      @QueryParam("client_id") String client_id,
+      @QueryParam("code_verifier") String codeVerifier) {
+
+    // TODO: exchange code with access token
 
     return Response.ok().build();
   }

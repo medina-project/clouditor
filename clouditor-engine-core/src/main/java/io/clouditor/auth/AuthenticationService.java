@@ -10,6 +10,7 @@ import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.kosprov.jargon2.api.Jargon2.Type;
 import io.clouditor.Engine;
+import io.clouditor.oauth.OAuthClient;
 import io.clouditor.util.PersistenceManager;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -49,6 +50,8 @@ public class AuthenticationService {
     if (users == 0) {
       createDefaultUser();
     }
+
+    createDefaultOAuthClient();
   }
 
   /**
@@ -64,6 +67,20 @@ public class AuthenticationService {
     PersistenceManager.getInstance().persist(user);
 
     LOGGER.info("Created default user {}.", user.getUsername());
+  }
+
+  /** Creates a default OAuth 2.0 client. */
+  // TODO: is this needed for our device code grant?
+  private void createDefaultOAuthClient() {
+    var client = new OAuthClient();
+    client.setClientId("1");
+    client.setRedirectUrls(List.of("http://localhost:4200"));
+
+    PersistenceManager.getInstance().persist(client);
+  }
+
+  public OAuthClient getClient(String clientId) {
+    return PersistenceManager.getInstance().getById(OAuthClient.class, clientId);
   }
 
   private String hashPassword(String password) {
