@@ -10,8 +10,12 @@ import java.net.URISyntaxException;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.util.Base64;
+import java.util.HashMap;
+import java.util.Map;
 import javax.inject.Inject;
 import javax.ws.rs.GET;
+import javax.ws.rs.NotAuthorizedException;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.client.ClientBuilder;
@@ -34,6 +38,9 @@ public class OAuthResource {
   private final Engine engine;
 
   private static final Logger LOGGER = LoggerFactory.getLogger(OAuthResource.class);
+
+  // TODO: extract to AuthenticationService?
+  private Map<String, String> codes = new HashMap<>();
 
   @Inject
   public OAuthResource(AuthenticationService service, Engine engine) {
@@ -126,15 +133,25 @@ public class OAuthResource {
 
     // TODO: reject, if state is empty?
 
-    if (context.getCookies().get("authorization") != null) {
-      // TODO: check cookie
-      // TODO: somehow our login cookie is not set correctly, so this does not work at all at the
-      // moment
+    var authorization = context.getCookies().get("authorization");
 
-      return redirectToCallback(redirectUri, "mycode");
+    if (authorization == null) {
+      return redirectToLogin(responseType, clientId, redirectUri, scope, state);
     }
 
-    return redirectToLogin(responseType, clientId, redirectUri, scope, state);
+    // TODO: merge this with code in the AuthenticationFilter
+    try {
+      var user = this.service.verifyToken(authorization.getValue());
+
+      // TODO: generate code and store somewhere
+      var code = "mycode";
+
+      this.codes.put(code, user.getId());
+
+      return redirectToCallback(redirectUri, code);
+    } catch (NotAuthorizedException ex) {
+      return redirectWithError(redirectUri, "unauthorized_client", null);
+    }
   }
 
   private Response redirectWithError(URI redirectUri, String error, String errorDescription) {
@@ -174,18 +191,29 @@ public class OAuthResource {
     return Response.temporaryRedirect(uri).build();
   }
 
-  @GET
+  @POST
   @Path("token")
   public Response token(
       @QueryParam("grant_type") String grantType,
       @QueryParam("code") String code,
       @QueryParam("redirect_uri") String redirectUri,
-      @QueryParam("client_id") String client_id,
+      @QueryParam("client_id") String clientId,
       @QueryParam("code_verifier") String codeVerifier) {
 
-    // TODO: exchange code with access token
+    LOGGER.info(
+        "Got OAuth 2.0 token call with grant_type={}, code={}, redirect_uri={}, client_id={}, code_verifier={}",
+        grantType,
+        code,
+        redirectUri,
+        clientId,
+        codeVerifier);
 
-    return Response.ok().build();
+    // TODO: properly exchange code with access token
+
+    var userId = this.codes.get(code);
+    var accessToken = this.service.createToken(userId);
+
+    return Response.ok().entity("{\"access_token\": \"" + accessToken + "\"}").build();
   }
 
   @GET

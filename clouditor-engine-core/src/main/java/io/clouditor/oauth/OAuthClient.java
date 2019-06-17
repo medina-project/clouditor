@@ -37,6 +37,7 @@ import java.util.List;
 public class OAuthClient implements PersistentObject<String> {
 
   private String clientId;
+  private String name;
   private List<URI> redirectUrls;
 
   @Override
@@ -58,5 +59,13 @@ public class OAuthClient implements PersistentObject<String> {
 
   public void setRedirectUrls(List<URI> redirectUrls) {
     this.redirectUrls = redirectUrls;
+  }
+
+  public void setName(String name) {
+    this.name = name;
+  }
+
+  public String getName() {
+    return name;
   }
 }

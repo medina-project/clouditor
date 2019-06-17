@@ -52,7 +52,7 @@ public class AuthenticationService {
       createDefaultUser();
     }
 
-    createDefaultOAuthClient();
+    createCLIOAuthClient();
   }
 
   /**
@@ -70,12 +70,12 @@ public class AuthenticationService {
     LOGGER.info("Created default user {}.", user.getUsername());
   }
 
-  /** Creates a default OAuth 2.0 client. */
-  // TODO: is this needed for our device code grant?
-  private void createDefaultOAuthClient() {
+  /** Creates a the public OAuth 2.0 client for Clouditor CLI. */
+  private void createCLIOAuthClient() {
     var client = new OAuthClient();
-    client.setClientId("1");
-    client.setRedirectUrls(List.of(URI.create("http://localhost:1234")));
+    client.setClientId("65a645d0-9148-11e9-a097-f784d3bb2d62");
+    client.setName("Clouditor CLI");
+    client.setRedirectUrls(List.of(URI.create("http://localhost:8000")));
 
     PersistenceManager.getInstance().persist(client);
   }

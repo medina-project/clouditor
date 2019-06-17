@@ -122,7 +122,6 @@ public class AuthenticationFilter implements ContainerRequestFilter {
         throw new ForbiddenException(
             "User " + user.getName() + " does not have appropriate role to view resource.");
       }
-
     } catch (NotAuthorizedException | ForbiddenException ex) {
       // log the error
       LOGGER.error(
