@@ -28,7 +28,7 @@
  */
 
 import { Component, OnInit } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { Title } from '@angular/platform-browser';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { EMPTY } from 'rxjs';
@@ -50,14 +50,22 @@ export class LoginComponent implements OnInit {
   model = new User();
   submitted = false;
   oAuthEnabled = false;
+  returnUrl = '/';
 
   constructor(titleService: Title,
     private router: Router,
     private auth: AuthService,
     private http: HttpClient,
     private error: ErrorService,
-    private config: ConfigService) {
+    private config: ConfigService,
+    private route: ActivatedRoute) {
     titleService.setTitle('Login');
+
+    this.route.queryParams.subscribe(params => {
+      if (params['returnUrl']) {
+        this.returnUrl = params['returnUrl'];
+      }
+    });
   }
 
   ngOnInit() {
@@ -94,7 +102,14 @@ export class LoginComponent implements OnInit {
         if (response.token) {
           this.error.set(undefined);
           this.auth.login(response.token);
-          this.router.navigate(['/']);
+
+          // returnUrl could be "external" to Angular, i.e. to the oauth2 endpoint
+          if (this.returnUrl.startsWith('/oauth2')) {
+            // TODO: find another way than window.location?
+            window.location.href = this.returnUrl;
+          } else {
+            this.router.navigate([this.returnUrl]);
+          }
         }
       });
   }

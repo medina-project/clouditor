@@ -7,6 +7,8 @@ import io.clouditor.auth.User;
 import io.clouditor.util.PersistenceManager;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URLEncoder;
+import java.nio.charset.Charset;
 import java.util.Base64;
 import javax.inject.Inject;
 import javax.ws.rs.GET;
@@ -58,44 +60,58 @@ public class OAuthResource {
   public Response authorize(
       @QueryParam("response_type") String responseType,
       @QueryParam("client_id") String clientId,
-      @QueryParam("redirect_uri") String redirectUri,
+      @QueryParam("redirect_uri") String redirectUriString,
       @QueryParam("scope") String scope,
       @QueryParam("state") String state,
       @Context ContainerRequestContext context) {
 
-    // TODO: check response type (only code?)
-
     // check, if clientId is empty
     if (clientId == null || clientId.isBlank()) {
-      // TODO: what kind of error?
-      return Response.status(Status.BAD_REQUEST).build();
+      return Response.status(Status.BAD_REQUEST).entity("client_id was not specified").build();
     }
 
     // check, if clientId is in the database
     var client = this.service.getClient(clientId);
     if (client == null) {
-      // TODO: what kind of error?
-      return Response.status(Status.BAD_REQUEST).build();
+      return Response.status(Status.BAD_REQUEST)
+          .entity("Cannot find a valid client with specified client_id")
+          .build();
     }
 
     // check, if redirectUri is empty
     // TODO: do we need to allow empty redirect urls for device code?
-    if (redirectUri == null || redirectUri.isBlank()) {
-      // TODO: what kind of error?
-      return Response.status(Status.BAD_REQUEST).build();
+    if (redirectUriString == null || redirectUriString.isBlank()) {
+      return Response.status(Status.BAD_REQUEST).entity("redirect_uri was empty").build();
     }
 
     // check, if redirectUri is a valid URI
+    URI redirectUri;
     try {
-      var url = new URI(redirectUri);
+      redirectUri = new URI(redirectUriString);
     } catch (URISyntaxException e) {
-      // TODO: what kind of error?
-      return Response.status(Status.BAD_REQUEST).build();
+      return Response.status(Status.BAD_REQUEST).entity("redirect_uri is not a valid URL").build();
     }
 
     if (!client.getRedirectUrls().contains(redirectUri)) {
-      // TODO: what kind of error?
-      return Response.status(Status.BAD_REQUEST).build();
+      return Response.status(Status.BAD_REQUEST)
+          .entity("Client does not contain specified redirect_uri")
+          .build();
+    }
+
+    // check, if responseType is empty
+    if (responseType == null || responseType.isBlank()) {
+      return redirectWithError(redirectUri, "invalid_request", null);
+    }
+
+    // check, if scope is empty
+    if (scope == null || scope.isBlank()) {
+      return redirectWithError(redirectUri, "invalid_scope", null);
+    }
+
+    // check, if state is empty
+    // TODO: check if this is standard-compliant
+    if (scope == null || scope.isBlank()) {
+      return redirectWithError(redirectUri, "invalid_request", null);
     }
 
     // TODO: do we need scopes?
@@ -110,8 +126,52 @@ public class OAuthResource {
         scope,
         state);
 
-    // TODO: check cookie or redirect to login page
-    return Response.temporaryRedirect(URI.create("/#?login")).build();
+    if (context.getCookies().get("token") != null) {
+      // TODO: check cookie
+      // TODO: somehow our login cookie is not set correctly, so this does not work at all at the
+      // moment
+
+      return redirectToCallback(redirectUri, "mycode");
+    }
+
+    return redirectToLogin(responseType, clientId, redirectUri, scope, state);
+  }
+
+  private Response redirectWithError(URI redirectUri, String error, String errorDescription) {
+    var builder = UriBuilder.fromUri(redirectUri).queryParam("error", error);
+
+    if (errorDescription != null) {
+      builder.queryParam("error_description", errorDescription);
+    }
+
+    return Response.temporaryRedirect(builder.build()).build();
+  }
+
+  private Response redirectToCallback(URI redirectUri, String code) {
+    var uri = UriBuilder.fromUri(redirectUri).queryParam("code", code).build();
+
+    return Response.temporaryRedirect(uri).build();
+  }
+
+  private Response redirectToLogin(
+      String responseType, String clientId, URI redirectUri, String scope, String state) {
+    var returnUrl =
+        UriBuilder.fromUri("/oauth2/authorize")
+            .queryParam("response_type", responseType)
+            .queryParam("client_id", clientId)
+            .queryParam("redirect_uri", redirectUri)
+            .queryParam("scope", scope)
+            .queryParam("state", state)
+            .build();
+
+    /* angular is particular about the hash! it needs to be included.
+    we cannot use UriBuilder, since it will remove the hash */
+    var uri =
+        URI.create(
+            "/#/login?returnUrl="
+                + URLEncoder.encode(returnUrl.toString(), Charset.defaultCharset()));
+
+    return Response.temporaryRedirect(uri).build();
   }
 
   @GET
