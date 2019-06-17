@@ -14,6 +14,8 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.ClientRequestFilter;
 import javax.ws.rs.client.ClientResponseFilter;
+import javax.ws.rs.container.ContainerRequestContext;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
@@ -47,6 +49,28 @@ public class OAuthResource {
             && this.engine.getOAuthJwtSecret() != null);
 
     return profile;
+  }
+
+  @GET
+  @Path("authorize")
+  public Response authorize(
+      @QueryParam("response_type") String responseType,
+      @QueryParam("client_id") String clientId,
+      @QueryParam("redirect_uri") String redirectUri,
+      @QueryParam("scope") String scope,
+      @QueryParam("state") String state,
+      @Context ContainerRequestContext context) {
+    // TODO: authorize
+
+    LOGGER.info(
+        "Got OAuth 2.0 authorize call with response_type={}, client_id={}, redirect_uri={}, scope={}, state={}",
+        responseType,
+        clientId,
+        redirectUri,
+        scope,
+        state);
+
+    return Response.ok().build();
   }
 
   @GET
