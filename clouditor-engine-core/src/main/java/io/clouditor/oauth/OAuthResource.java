@@ -65,6 +65,14 @@ public class OAuthResource {
       @QueryParam("state") String state,
       @Context ContainerRequestContext context) {
 
+    LOGGER.info(
+        "Got OAuth 2.0 authorize call with response_type={}, client_id={}, redirect_uri={}, scope={}, state={}",
+        responseType,
+        clientId,
+        redirectUriString,
+        scope,
+        state);
+
     // check, if clientId is empty
     if (clientId == null || clientId.isBlank()) {
       return Response.status(Status.BAD_REQUEST).entity("client_id was not specified").build();
@@ -118,15 +126,7 @@ public class OAuthResource {
 
     // TODO: reject, if state is empty?
 
-    LOGGER.info(
-        "Got OAuth 2.0 authorize call with response_type={}, client_id={}, redirect_uri={}, scope={}, state={}",
-        responseType,
-        clientId,
-        redirectUri,
-        scope,
-        state);
-
-    if (context.getCookies().get("token") != null) {
+    if (context.getCookies().get("authorization") != null) {
       // TODO: check cookie
       // TODO: somehow our login cookie is not set correctly, so this does not work at all at the
       // moment
@@ -214,14 +214,15 @@ public class OAuthResource {
 
     payload.setToken(service.createToken(user.getUsername()));
 
-    // TODO: max age, etc.
+    var cookie =
+        new NewCookie(
+            "authorization", payload.getToken(), "/", null, "", NewCookie.DEFAULT_MAX_AGE, false);
+
     /* angular is particular about the hash! it needs to be included.
     we cannot use UriBuilder, since it will remove the hash */
     var uri = URI.create("/#?token=" + payload.getToken());
 
-    return Response.temporaryRedirect(uri)
-        .cookie(new NewCookie("authorization", payload.getToken()))
-        .build();
+    return Response.temporaryRedirect(uri).cookie(cookie).build();
   }
 
   private TokenResponse retrieveAccessToken(String code) {

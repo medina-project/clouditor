@@ -49,6 +49,10 @@ export class AuthInterceptor implements HttpInterceptor {
       });
     }
 
+    request = request.clone({
+      withCredentials: true
+    });
+
     return next.handle(request);
   }
 }

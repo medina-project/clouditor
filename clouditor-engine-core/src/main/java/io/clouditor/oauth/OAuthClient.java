@@ -30,13 +30,14 @@
 package io.clouditor.oauth;
 
 import io.clouditor.util.PersistentObject;
+import java.net.URI;
 import java.util.List;
 
 /** Represents a client to our OAuth 2.0 server. */
 public class OAuthClient implements PersistentObject<String> {
 
   private String clientId;
-  private List<String> redirectUrls;
+  private List<URI> redirectUrls;
 
   @Override
   public String getId() {
@@ -51,11 +52,11 @@ public class OAuthClient implements PersistentObject<String> {
     return clientId;
   }
 
-  public List<String> getRedirectUrls() {
+  public List<URI> getRedirectUrls() {
     return redirectUrls;
   }
 
-  public void setRedirectUrls(List<String> redirectUrls) {
+  public void setRedirectUrls(List<URI> redirectUrls) {
     this.redirectUrls = redirectUrls;
   }
 }

@@ -69,7 +69,10 @@ public class AuthenticateResource {
 
     payload.setToken(service.createToken(request.getUsername()));
 
-    // TODO: max age, etc.
-    return Response.ok(payload).cookie(new NewCookie("authorization", payload.getToken())).build();
+    var cookie =
+        new NewCookie(
+            "authorization", payload.getToken(), "/", null, "", NewCookie.DEFAULT_MAX_AGE, false);
+
+    return Response.ok(payload).cookie(cookie).build();
   }
 }

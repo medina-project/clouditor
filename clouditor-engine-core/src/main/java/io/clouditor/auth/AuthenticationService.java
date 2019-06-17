@@ -12,6 +12,7 @@ import com.kosprov.jargon2.api.Jargon2.Type;
 import io.clouditor.Engine;
 import io.clouditor.oauth.OAuthClient;
 import io.clouditor.util.PersistenceManager;
+import java.net.URI;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -74,7 +75,7 @@ public class AuthenticationService {
   private void createDefaultOAuthClient() {
     var client = new OAuthClient();
     client.setClientId("1");
-    client.setRedirectUrls(List.of("http://localhost:4200"));
+    client.setRedirectUrls(List.of(URI.create("http://localhost:1234")));
 
     PersistenceManager.getInstance().persist(client);
   }
