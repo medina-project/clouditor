@@ -10,6 +10,7 @@ import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.kosprov.jargon2.api.Jargon2.Type;
 import io.clouditor.Engine;
+import io.clouditor.oauth.AuthorizationCode;
 import io.clouditor.oauth.OAuthClient;
 import io.clouditor.util.PersistenceManager;
 import java.net.URI;
@@ -18,9 +19,11 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import javax.inject.Inject;
 import javax.ws.rs.NotAuthorizedException;
+import org.apache.commons.collections4.map.PassiveExpiringMap;
 import org.jvnet.hk2.annotations.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,6 +41,9 @@ public class AuthenticationService {
   public static final String ERROR_MESSAGE_USER_NOT_FOUND = "User does not exist";
 
   private Engine engine;
+
+  private PassiveExpiringMap<String, AuthorizationCode> codes =
+      new PassiveExpiringMap<>(10, TimeUnit.MINUTES);
 
   @Inject
   public AuthenticationService(Engine engine) {
@@ -205,5 +211,17 @@ public class AuthenticationService {
   public void deleteUser(String id) {
     // delete it from database
     PersistenceManager.getInstance().delete(User.class, id);
+  }
+
+  public AuthorizationCode generateCode(String userId, String clientId, List<String> scopes) {
+    var code = AuthorizationCode.generate(userId, clientId, scopes);
+
+    this.codes.put(code.getId(), code);
+
+    return code;
+  }
+
+  public AuthorizationCode lookupCode(String code) {
+    return this.codes.get(code);
   }
 }

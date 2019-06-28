@@ -27,24 +27,42 @@
  * long with Clouditor Community Edition.  If not, see <https://www.gnu.org/licenses/>
  */
 
-package io.clouditor.util;
+package io.clouditor.oauth;
 
-import java.security.SecureRandom;
-import org.glassfish.grizzly.http.util.HexUtils;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class IdGenerator {
+public class ErrorResponse {
 
-  private static final SecureRandom RANDOM = new SecureRandom();
+  @JsonProperty("error")
+  String error;
 
-  private IdGenerator() {
-    throw new IllegalStateException(this.getClass() + "should not be instantiated directly.");
+  @JsonProperty("error_description")
+  String errorDescription;
+
+  @JsonProperty("error_uri")
+  String errorUri;
+
+  public String getError() {
+    return error;
   }
 
-  public static String nextRandom(int length) {
-    byte[] bytes = new byte[length];
+  public void setError(String error) {
+    this.error = error;
+  }
 
-    RANDOM.nextBytes(bytes);
+  public String getErrorDescription() {
+    return errorDescription;
+  }
 
-    return HexUtils.convert(bytes);
+  public void setErrorDescription(String errorDescription) {
+    this.errorDescription = errorDescription;
+  }
+
+  public String getErrorUri() {
+    return errorUri;
+  }
+
+  public void setErrorUri(String errorUri) {
+    this.errorUri = errorUri;
   }
 }

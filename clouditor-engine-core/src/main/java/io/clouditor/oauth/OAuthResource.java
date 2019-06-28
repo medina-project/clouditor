@@ -10,19 +10,23 @@ import java.net.URISyntaxException;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.util.Base64;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
+import java.util.Objects;
 import javax.inject.Inject;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.NotAuthorizedException;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.ClientRequestFilter;
 import javax.ws.rs.client.ClientResponseFilter;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
@@ -38,9 +42,6 @@ public class OAuthResource {
   private final Engine engine;
 
   private static final Logger LOGGER = LoggerFactory.getLogger(OAuthResource.class);
-
-  // TODO: extract to AuthenticationService?
-  private Map<String, String> codes = new HashMap<>();
 
   @Inject
   public OAuthResource(AuthenticationService service, Engine engine) {
@@ -130,6 +131,7 @@ public class OAuthResource {
     }
 
     // TODO: do we need scopes?
+    var scopes = List.of(scope.split(" "));
 
     // TODO: reject, if state is empty?
 
@@ -143,12 +145,10 @@ public class OAuthResource {
     try {
       var user = this.service.verifyToken(authorization.getValue());
 
-      // TODO: generate code and store somewhere
-      var code = "mycode";
+      // Generate and store code
+      var code = this.service.generateCode(user.getId(), clientId, scopes);
 
-      this.codes.put(code, user.getId());
-
-      return redirectToCallback(redirectUri, code);
+      return redirectToCallback(redirectUri, code.getId());
     } catch (NotAuthorizedException ex) {
       return redirectWithError(redirectUri, "unauthorized_client", null);
     }
@@ -162,6 +162,14 @@ public class OAuthResource {
     }
 
     return Response.temporaryRedirect(builder.build()).build();
+  }
+
+  private Response errorBadRequest(String error, String errorDescription) {
+    var response = new ErrorResponse();
+    response.setError(error);
+    response.setErrorDescription(errorDescription);
+
+    return Response.status(Status.BAD_REQUEST).entity(response).build();
   }
 
   private Response redirectToCallback(URI redirectUri, String code) {
@@ -193,12 +201,14 @@ public class OAuthResource {
 
   @POST
   @Path("token")
+  @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+  @Produces(MediaType.APPLICATION_JSON)
   public Response token(
-      @QueryParam("grant_type") String grantType,
-      @QueryParam("code") String code,
-      @QueryParam("redirect_uri") String redirectUri,
-      @QueryParam("client_id") String clientId,
-      @QueryParam("code_verifier") String codeVerifier) {
+      @FormParam("grant_type") String grantType,
+      @FormParam("code") String code,
+      @FormParam("redirect_uri") String redirectUri,
+      @FormParam("client_id") String clientId,
+      @FormParam("code_verifier") String codeVerifier) {
 
     LOGGER.info(
         "Got OAuth 2.0 token call with grant_type={}, code={}, redirect_uri={}, client_id={}, code_verifier={}",
@@ -208,12 +218,34 @@ public class OAuthResource {
         clientId,
         codeVerifier);
 
-    // TODO: properly exchange code with access token
+    if (clientId == null || clientId.isEmpty()) {
+      // code was empty
+      return errorBadRequest("invalid_request", "Request parameter 'clientId' is missing");
+    }
 
-    var userId = this.codes.get(code);
-    var accessToken = this.service.createToken(userId);
+    if (code == null || code.isEmpty()) {
+      // code was empty
+      return errorBadRequest("invalid_request", "Request parameter 'code' is missing");
+    }
 
-    return Response.ok().entity("{\"access_token\": \"" + accessToken + "\"}").build();
+    // TODO: authenticate the client
+
+    var authorizationCode = this.service.lookupCode(code);
+
+    if (authorizationCode == null) {
+      // code is not valid
+      return Response.status(Status.UNAUTHORIZED).entity("Authentication code not found").build();
+    }
+
+    if (!Objects.equals(authorizationCode.getClientId(), clientId)) {
+      // code was for another client id
+      return Response.status(Status.UNAUTHORIZED).entity("Client id is not valid").build();
+    }
+
+    var response = new TokenResponse();
+    response.setAccessToken(this.service.createToken(authorizationCode.getUserId()));
+
+    return Response.ok().entity(response).build();
   }
 
   @GET

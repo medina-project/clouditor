@@ -27,24 +27,50 @@
  * long with Clouditor Community Edition.  If not, see <https://www.gnu.org/licenses/>
  */
 
-package io.clouditor.util;
+package io.clouditor.oauth;
 
-import java.security.SecureRandom;
-import org.glassfish.grizzly.http.util.HexUtils;
+import io.clouditor.util.IdGenerator;
+import java.util.List;
 
-public class IdGenerator {
+public class AuthorizationCode {
 
-  private static final SecureRandom RANDOM = new SecureRandom();
+  private String id;
+  private String userId;
+  private List<String> scopes;
+  private String clientId;
 
-  private IdGenerator() {
-    throw new IllegalStateException(this.getClass() + "should not be instantiated directly.");
+  public static AuthorizationCode generate(String userId, String clientId, List<String> scopes) {
+    var code = new AuthorizationCode();
+
+    code.id = IdGenerator.nextRandom(80);
+    code.userId = userId;
+    code.clientId = clientId;
+    code.scopes = scopes;
+
+    return code;
   }
 
-  public static String nextRandom(int length) {
-    byte[] bytes = new byte[length];
+  public String getId() {
+    return id;
+  }
 
-    RANDOM.nextBytes(bytes);
+  public void setId(String id) {
+    this.id = id;
+  }
 
-    return HexUtils.convert(bytes);
+  public String getUserId() {
+    return userId;
+  }
+
+  public void setUserId(String userId) {
+    this.userId = userId;
+  }
+
+  public Object getClientId() {
+    return clientId;
+  }
+
+  public void setClientId(String clientId) {
+    this.clientId = clientId;
   }
 }
