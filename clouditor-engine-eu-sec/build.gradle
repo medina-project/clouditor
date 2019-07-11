@@ -32,7 +32,7 @@ apply plugin: "java-library"
 dependencies {
     implementation project(":clouditor-engine-core")
 
-    implementation group: 'eu.sec.cert', name: 'continuous-auditing-api-java-client', version: '1.0.8'
+    implementation group: 'eu.sec-cert', name: 'continuous-auditing-api-java-client', version: '1.0.8'
 
     implementation group: 'com.github.wnameless', name: 'json-flattener', version: '0.6.0'
 }
