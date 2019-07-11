@@ -98,7 +98,9 @@ workflows:
           context: org-global
           filters:
             branches:
-              ignore: master
+              ignore:
+                - master
+                - eu-sec
       - build_and_push:
           context: org-global
           filters:
