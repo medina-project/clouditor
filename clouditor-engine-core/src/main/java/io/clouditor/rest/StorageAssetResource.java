@@ -29,10 +29,13 @@
 
 package io.clouditor.rest;
 
+import static io.clouditor.auth.AuthenticationService.ROLE_USER;
+
 import io.clouditor.Engine;
 import io.clouditor.discovery.StorageAsset;
 import io.clouditor.discovery.StorageAssetService;
 import java.util.Map;
+import javax.annotation.security.RolesAllowed;
 import javax.inject.Inject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
@@ -41,7 +44,7 @@ import org.slf4j.LoggerFactory;
 
 /** A storage asset discovery endpoint */
 @Path("storageAsset")
-// @RolesAllowed(ROLE_USER)
+@RolesAllowed(ROLE_USER)
 public class StorageAssetResource {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(StorageAssetResource.class);

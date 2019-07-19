@@ -180,7 +180,7 @@ class EngineAPIResourcesTest extends JerseyTest {
   }
 
   @Test
-  void testStorageAssetLikeCertification() {
+  void testStorageAsset() {
     // add fake StorageAsset
     var mockStorageAsset = new StorageAsset();
     mockStorageAsset.setId("mock-storageAsset");

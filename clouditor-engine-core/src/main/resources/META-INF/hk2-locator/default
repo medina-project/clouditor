@@ -9,3 +9,5 @@
 [io.clouditor.credentials.AccountService]S
 
 [io.clouditor.auth.AuthenticationService]S
+
+[io.clouditor.discovery.StorageAssetService]S
