@@ -46,6 +46,8 @@ import io.clouditor.discovery.AssetProperties;
 import io.clouditor.discovery.AssetService;
 import io.clouditor.discovery.DiscoveryService;
 import io.clouditor.discovery.Scan;
+import io.clouditor.discovery.StorageAsset;
+import io.clouditor.discovery.StorageAssetService;
 import io.clouditor.util.FileSystemManager;
 import java.io.IOException;
 import java.util.List;
@@ -175,6 +177,35 @@ class EngineAPIResourcesTest extends JerseyTest {
     var cert = certifications.get(mockCert.getId());
 
     assertEquals(mockCert, cert);
+  }
+
+  @Test
+  void testStorageAssetLikeCertification() {
+    // add fake StorageAsset
+    var mockStorageAsset = new StorageAsset();
+    mockStorageAsset.setId("mock-storageAsset");
+    mockStorageAsset.setName("testStorageAssets");
+    mockStorageAsset.setType("storage");
+
+    var service = engine.getService(StorageAssetService.class);
+
+    service.modifyStorageAsset(mockStorageAsset);
+
+    var storageAssets =
+            target("storageAsset")
+                    .request()
+                    .header(
+                            AuthenticationFilter.HEADER_AUTHORIZATION,
+                            AuthenticationFilter.createAuthorization(this.token))
+                    .get(new GenericType<Map<String, StorageAsset>>() {});
+
+    assertEquals(service.getStorageAssets(), storageAssets);
+
+    assertTrue(storageAssets.containsKey(mockStorageAsset.getId()));
+
+    var storeAsset = storageAssets.get(mockStorageAsset.getId());
+
+    assertEquals(mockStorageAsset, storeAsset);
   }
 
   @Test
