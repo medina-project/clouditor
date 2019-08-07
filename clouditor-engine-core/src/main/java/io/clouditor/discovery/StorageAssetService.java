@@ -1,6 +1,5 @@
 package io.clouditor.discovery;
 
-import io.clouditor.util.PersistenceManager;
 import java.util.HashMap;
 import java.util.Map;
 import org.apache.logging.log4j.LogManager;
@@ -28,9 +27,6 @@ public class StorageAssetService {
   public void modifyStorageAsset(StorageAsset storageAsset) {
     // load it
     this.loadStorageAsset(storageAsset);
-
-    // persist it
-    PersistenceManager.getInstance().persist(storageAsset);
 
     // update
     this.updateStorageAsset(storageAsset);
