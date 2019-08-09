@@ -1,0 +1,157 @@
+openapi: 3.0.0
+info:
+  description: Azure Storage Assets
+  version: "1.0.0"
+  title: Azure Storage Assets API
+servers:
+  - url: 'https://{myaccount}.file.core.windows.net'
+    variables:
+      myaccount:
+        default: bcloudtest
+        description: Customer ID assigned by the service provider
+paths:
+  "/":
+    get:
+      summary: List shares
+      operationId: getShareList
+      parameters:
+        - in: query
+          name: comp
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: A successful operation to read the file share
+        '403':
+          description: The specified share is disabled by the administrator.
+        '404':
+          description: The specified parent path does not exist.
+        '412':
+          description: The append position condition specified was not met.
+  "/{myshare}/{mydirectorypath}":
+    get:
+      summary: List directories and files
+      operationId: getDirectoryAndFileList
+      parameters:
+        - name: myshare
+          in: path
+          description: Name of file share
+          required: true
+          schema:
+            type: string
+        - name: mydirectorypath
+          in: path
+          description: Name of directorypath
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: restype
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: comp
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: A successful operation to read the file share
+        '403':
+          description: This request is not authorized to perform this operation.
+        '404':
+          description: The specified file does not exist.
+        '412':
+          description: The append position condition specified was not met.
+  "/{myshare}/{mydirectorypath}/{myfile}":
+    get:
+      summary: Get file from file share
+      operationId: getFile
+      parameters:
+        - name: myshare
+          in: path
+          description: Name of file share
+          required: true
+          schema:
+            type: string
+        - name: mydirectorypath
+          in: path
+          description: Name of directorypath
+          required: true
+          schema:
+            type: string
+        - name: myfile
+          in: path
+          description: Name of file
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: A successful operation to read the file
+        '403':
+          description: This request is not authorized to perform this operation.
+        '404':
+          description: The specified parent path does not exist.
+    put:
+      summary: Put file to file share
+      operationId: putFile
+      parameters:
+        - name: myshare
+          in: path
+          description: Name of file share
+          required: true
+          schema:
+            type: string
+        - name: mydirectorypath
+          in: path
+          description: Name of directorypath
+          required: true
+          schema:
+            type: string
+        - name: myfile
+          in: path
+          description: Name of file
+          required: true
+          schema:
+            type: string
+      responses:
+        '201':
+          description: File created
+        '403':
+          description: This request is not authorized to perform this operation.
+        '404':
+          description: The specified parent path does not exist.
+    delete:
+      summary: Delete file from file share
+      operationId: deleteFile
+      parameters:
+        - name: myshare
+          in: path
+          description: Name of file share
+          required: true
+          schema:
+            type: string
+        - name: mydirectorypath
+          in: path
+          description: Name of directorypath
+          required: true
+          schema:
+            type: string
+        - name: myfile
+          in: path
+          description: Name of file
+          required: true
+          schema:
+            type: string
+      responses:
+        '202':
+          description: File deleted
+        '403':
+          description: This request is not authorized to perform this operation.
+        '404':
+          description: The specified parent path does not exist.
+        '412':
+          description: The append position condition specified was not met.

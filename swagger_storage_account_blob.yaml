@@ -1,0 +1,139 @@
+openapi: 3.0.0
+info:
+  description: Azure Storage Assets
+  version: "1.0.0"
+  title: Azure Storage Assets API
+servers:
+  - url: 'https://{myaccount}.blob.core.windows.net'
+    variables:
+      myaccount:
+        default: bcloudtest
+        description: Customer ID assigned by the service provider
+paths:
+  "/":
+    get:
+      summary: List containers
+      operationId: getContainerList
+      parameters:
+        - in: query
+          name: comp
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: A successful operation to read the full blob
+        '403':
+          description: This request is not authorized to perform this operation.
+        '404':
+          description: The specified blob does not exist.
+        '412':
+          description: The append position condition specified was not met.
+  "/{mycontainer}":
+    get:
+      summary: List blobs
+      operationId: getBlobList
+      parameters:
+        - name: mycontainer
+          in: path
+          description: Name of blob container
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: restype
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: comp
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: A successful operation to read the full blob
+        '403':
+          description: This request is not authorized to perform this operation.
+        '404':
+          description: The specified blob does not exist.
+        '412':
+          description: The append position condition specified was not met.
+  "/{mycontainer}/{myblob}":
+    get:
+      summary: Get blob from container
+      operationId: getBlob
+      parameters:
+        - name: mycontainer
+          in: path
+          description: Name of blob container
+          required: true
+          schema:
+            type: string
+        - name: myblob
+          in: path
+          description: Name of blob
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: A successful operation to read the full blob
+        '206':
+          description: A successful operation to read a specified range (partial content)
+        '403':
+          description: This request is not authorized to perform this operation.
+        '404':
+          description: The specified blob does not exist.
+        '412':
+          description: The append position condition specified was not met.
+    put:
+      summary: Put blob to container
+      operationId: putBlob
+      parameters:
+        - name: mycontainer
+          in: path
+          description: Name of blob container
+          required: true
+          schema:
+            type: string
+        - name: myblob
+          in: path
+          description: Name of blob
+          required: true
+          schema:
+            type: string
+      responses:
+        '201':
+          description: Blob created
+        '403':
+          description: This request is not authorized to perform this operation.
+        '409':
+          description: The specified blob already exists.
+        '412':
+          description: The append position condition specified was not met.
+    delete:
+      summary: Delete blob from container
+      operationId: deleteBlob
+      parameters:
+        - name: mycontainer
+          in: path
+          description: Name of blob container
+          required: true
+          schema:
+            type: string
+        - name: myblob
+          in: path
+          description: Name of blob
+          required: true
+          schema:
+            type: string
+      responses:
+        '202':
+          description: Blob deleted
+        '403':
+          description: This request is not authorized to perform this operation.
+        '404':
+          description: The specified blob does not exist.
+        '412':
+          description: The append position condition specified was not met.
