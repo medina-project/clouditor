@@ -3,7 +3,7 @@
 Monitoring agent extensions should be installed on Azure VMs.
 
 ```ccl
-VirtualMachine has name == "MicrosoftMonitoringAgent" in extensions
+VirtualMachine has properties.type == "MicrosoftMonitoringAgent" in any extensions
 # TODO: support AND expression, since the provisioning state also must be "succeeded"
 ```
 
