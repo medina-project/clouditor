@@ -27,6 +27,7 @@
 
 package io.clouditor.discovery.azure;
 
+import com.microsoft.azure.management.monitor.EventData;
 import com.microsoft.azure.management.resources.fluentcore.arm.models.HasId;
 import com.microsoft.azure.management.resources.fluentcore.arm.models.HasName;
 import com.microsoft.azure.management.storage.StorageAccount;
@@ -35,6 +36,7 @@ import io.clouditor.discovery.AssetProperties;
 import io.clouditor.discovery.ScanException;
 import io.clouditor.discovery.ScannerInfo;
 import java.util.List;
+import org.joda.time.DateTime;
 
 @ScannerInfo(assetType = "StorageAccount", group = "Azure", service = "Storage")
 public class AzureStorageAccountScanner extends AzureScanner<StorageAccount> {
@@ -63,7 +65,7 @@ public class AzureStorageAccountScanner extends AzureScanner<StorageAccount> {
 
     var isKeyRegenerated = false;
 
-    /*List<EventData> accountLogs =
+    List<EventData> accountLogs =
         this.api
             .monitor()
             .activityLogs()
@@ -83,7 +85,7 @@ public class AzureStorageAccountScanner extends AzureScanner<StorageAccount> {
       }
     }
 
-    map.put("keyRegenerated", isKeyRegenerated);*/
+    asset.setProperty("keyRegenerated", isKeyRegenerated);
 
     return asset;
   }
