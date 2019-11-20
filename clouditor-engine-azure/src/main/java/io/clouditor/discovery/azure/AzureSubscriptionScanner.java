@@ -27,6 +27,7 @@
 
 package io.clouditor.discovery.azure;
 
+import com.microsoft.azure.management.monitor.ActivityLogAlert;
 import com.microsoft.azure.management.monitor.implementation.LogProfileResourceInner;
 import com.microsoft.azure.management.network.ProvisioningState;
 import com.microsoft.azure.management.resources.Subscription;
@@ -60,6 +61,15 @@ public class AzureSubscriptionScanner extends AzureScanner<Subscription> {
         null,
         LogProfileResourceInner::id,
         LogProfileResourceInner::name);
+
+    enrichList(
+            asset,
+            "logAlerts",
+            subscription,
+            x -> this.api.azure().alertRules().activityLogAlerts().list(),
+            null,
+            ActivityLogAlert::id,
+            ActivityLogAlert::name);
 
     var regions = new AssetProperties();
 
