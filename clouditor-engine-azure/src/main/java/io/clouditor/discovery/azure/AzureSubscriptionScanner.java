@@ -63,13 +63,13 @@ public class AzureSubscriptionScanner extends AzureScanner<Subscription> {
         LogProfileResourceInner::name);
 
     enrichList(
-            asset,
-            "logAlerts",
-            subscription,
-            x -> this.api.azure().alertRules().activityLogAlerts().list(),
-            null,
-            ActivityLogAlert::id,
-            ActivityLogAlert::name);
+        asset,
+        "logAlerts",
+        subscription,
+        x -> this.api.azure().alertRules().activityLogAlerts().list(),
+        null,
+        ActivityLogAlert::id,
+        ActivityLogAlert::name);
 
     var regions = new AssetProperties();
 
