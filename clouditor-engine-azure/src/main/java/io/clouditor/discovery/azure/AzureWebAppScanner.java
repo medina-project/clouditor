@@ -62,7 +62,7 @@ public class AzureWebAppScanner extends AzureScanner<WebApp> {
     /* This call requires special permissions
      asset.setProperty("authenticationEnabled", webapp.getAuthenticationConfig().inner().enabled());
     */
-    
+
     return asset;
   }
 }
