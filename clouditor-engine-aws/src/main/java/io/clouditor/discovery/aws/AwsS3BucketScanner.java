@@ -125,14 +125,15 @@ public class AwsS3BucketScanner extends AwsScanner<S3Client, S3ClientBuilder, Bu
       // rein, bekomme ich es nicht, da ich die keys nicht konkatenieren kann und nicht das
       // rule-Objekt als Asset
       // übergeben kann.
-      /*enrichSimple(
-              map,
-              "bucketReplicationLocation",
-              client::getBucketLocation,
-              GetBucketLocationResponse::locationConstraint,
-              GetBucketLocationRequest.builder().bucket(replicationDestinationBucket.toString())
-              .build());
-      */
+      //      enrichSimple(
+      //              rule,
+      //              "bucketReplicationLocation",
+      //              client::getBucketLocation,
+      //              GetBucketLocationResponse::locationConstraint,
+      //
+      // GetBucketLocationRequest.builder().bucket(replicationDestinationBucket.toString())
+      //              .build());
+
     }
 
     enrichList(

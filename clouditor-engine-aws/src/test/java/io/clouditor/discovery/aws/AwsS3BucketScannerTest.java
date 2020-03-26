@@ -198,25 +198,42 @@ class AwsS3BucketScannerTest extends AwsScannerTest {
           when(api.getBucketLocation(GetBucketLocationRequest.builder().bucket("Bucket-A").build()))
               .thenReturn(
                   GetBucketLocationResponse.builder()
-                      .locationConstraint(BucketLocationConstraint.EU)
+                      .locationConstraint(BucketLocationConstraint.EU_WEST_1)
                       .build());
 
           when(api.getBucketLocation(GetBucketLocationRequest.builder().bucket("Bucket-B").build()))
               .thenReturn(
                   GetBucketLocationResponse.builder()
-                      .locationConstraint(BucketLocationConstraint.US_WEST_2)
+                      .locationConstraint(BucketLocationConstraint.EU_WEST_1)
                       .build());
 
           when(api.getBucketLocation(GetBucketLocationRequest.builder().bucket("Bucket-C").build()))
               .thenReturn(
                   GetBucketLocationResponse.builder()
-                      .locationConstraint(BucketLocationConstraint.EU)
+                      .locationConstraint(BucketLocationConstraint.EU_WEST_1)
                       .build());
 
           when(api.getBucketLifecycleConfiguration(
                   (GetBucketLifecycleConfigurationRequest) ArgumentMatchers.any()))
               .thenThrow(AwsServiceException.builder().statusCode(404).build());
         });
+  }
+
+  @Test
+  void testBucketReplicationDestinationCheck() throws IOException {
+    var rule =
+        this.engine
+            .getService(RuleService.class)
+            .loadRule(
+                FileSystemManager.getInstance()
+                    .getPathForResource("rules/aws/s3/bucket-replication-destination.md"));
+
+    assertNotNull(rule);
+
+    var bucketA = assets.get("arn:aws:s3:::Bucket-A");
+
+    assertNotNull(bucketA);
+    assertTrue(rule.evaluate(bucketA).isOk());
   }
 
   @Test
@@ -232,11 +249,9 @@ class AwsS3BucketScannerTest extends AwsScannerTest {
 
     var bucketA = assets.get("arn:aws:s3:::Bucket-A");
 
-    System.out.println("rule: " + bucketA);
     assertNotNull(bucketA);
     assertTrue(rule.evaluate(bucketA).isOk());
 
-    // TODO Wieder einkommentieren, wenn fertig.
     var bucketB = assets.get("arn:aws:s3:::Bucket-B");
 
     assertNotNull(bucketB);
