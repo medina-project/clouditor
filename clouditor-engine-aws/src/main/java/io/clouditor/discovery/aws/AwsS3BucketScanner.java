@@ -33,13 +33,12 @@ import io.clouditor.discovery.AssetProperties;
 import io.clouditor.discovery.ScanException;
 import io.clouditor.discovery.ScannerInfo;
 import io.clouditor.util.PersistenceManager;
+import java.util.*;
 import software.amazon.awssdk.core.exception.SdkClientException;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.S3ClientBuilder;
 import software.amazon.awssdk.services.s3.model.*;
-
-import java.util.*;
 
 @ScannerInfo(assetType = "Bucket", group = "AWS", service = "S3", assetIcon = "fas fa-archive")
 public class AwsS3BucketScanner extends AwsScanner<S3Client, S3ClientBuilder, Bucket> {
@@ -94,7 +93,6 @@ public class AwsS3BucketScanner extends AwsScanner<S3Client, S3ClientBuilder, Bu
         GetBucketEncryptionResponse::serverSideEncryptionConfiguration,
         GetBucketEncryptionRequest.builder().bucket(bucket.name()).build());
 
-
     enrich(
         map,
         "bucketReplication",
@@ -103,18 +101,29 @@ public class AwsS3BucketScanner extends AwsScanner<S3Client, S3ClientBuilder, Bu
         GetBucketReplicationRequest.builder().bucket(bucket.name()).build());
 
     // Add BucketReplicationLocation to map
-    var bucketReplication = (AssetProperties) map.getProperties().getOrDefault("bucketReplication", Collections.emptyList());
-    var rules = (ArrayList)bucketReplication.getOrDefault("rules", Collections.emptyList());
+    var bucketReplication =
+        (AssetProperties)
+            map.getProperties().getOrDefault("bucketReplication", Collections.emptyList());
+    var rules = (ArrayList) bucketReplication.getOrDefault("rules", Collections.emptyList());
 
-    for ( var rule : rules) {
+    for (var rule : rules) {
       var replicationDestination = (HashMap) ((HashMap) rule).get("destination");
       var replicationDestinationBucket = replicationDestination.get("bucket");
 
-      ((HashMap) rule).put("bucketReplicationLocation",
-              client.getBucketLocation(GetBucketLocationRequest.builder().bucket(replicationDestinationBucket.toString()).build()).locationConstraintAsString());
+      ((HashMap) rule)
+          .put(
+              "bucketReplicationLocation",
+              client
+                  .getBucketLocation(
+                      GetBucketLocationRequest.builder()
+                          .bucket(replicationDestinationBucket.toString())
+                          .build())
+                  .locationConstraintAsString());
 
-      // Wenn man es so nutzt, dann wird der neue Eintrag auf die gleiche Ebene wie rules geschrieben. In die Rules
-      // rein, bekomme ich es nicht, da ich die keys nicht konkatenieren kann und nicht das rule-Objekt als Asset
+      // Wenn man es so nutzt, dann wird der neue Eintrag auf die gleiche Ebene wie rules
+      // geschrieben. In die Rules
+      // rein, bekomme ich es nicht, da ich die keys nicht konkatenieren kann und nicht das
+      // rule-Objekt als Asset
       // übergeben kann.
       /*enrichSimple(
               map,
@@ -137,5 +146,4 @@ public class AwsS3BucketScanner extends AwsScanner<S3Client, S3ClientBuilder, Bu
     System.out.println();
     return map;
   }
-
 }
