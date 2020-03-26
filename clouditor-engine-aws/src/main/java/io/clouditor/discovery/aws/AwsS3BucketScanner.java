@@ -29,28 +29,17 @@ package io.clouditor.discovery.aws;
 
 import io.clouditor.credentials.AwsAccount;
 import io.clouditor.discovery.Asset;
+import io.clouditor.discovery.AssetProperties;
 import io.clouditor.discovery.ScanException;
 import io.clouditor.discovery.ScannerInfo;
 import io.clouditor.util.PersistenceManager;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import software.amazon.awssdk.core.exception.SdkClientException;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.S3ClientBuilder;
-import software.amazon.awssdk.services.s3.model.Bucket;
-import software.amazon.awssdk.services.s3.model.GetBucketEncryptionRequest;
-import software.amazon.awssdk.services.s3.model.GetBucketEncryptionResponse;
-import software.amazon.awssdk.services.s3.model.GetBucketLifecycleConfigurationRequest;
-import software.amazon.awssdk.services.s3.model.GetBucketLifecycleConfigurationResponse;
-import software.amazon.awssdk.services.s3.model.GetBucketReplicationRequest;
-import software.amazon.awssdk.services.s3.model.GetBucketReplicationResponse;
-import software.amazon.awssdk.services.s3.model.GetPublicAccessBlockRequest;
-import software.amazon.awssdk.services.s3.model.GetPublicAccessBlockResponse;
-import software.amazon.awssdk.services.s3.model.HeadBucketRequest;
-import software.amazon.awssdk.services.s3.model.ListBucketsRequest;
-import software.amazon.awssdk.services.s3.model.S3Exception;
+import software.amazon.awssdk.services.s3.model.*;
+
+import java.util.*;
 
 @ScannerInfo(assetType = "Bucket", group = "AWS", service = "S3", assetIcon = "fas fa-archive")
 public class AwsS3BucketScanner extends AwsScanner<S3Client, S3ClientBuilder, Bucket> {
@@ -98,7 +87,6 @@ public class AwsS3BucketScanner extends AwsScanner<S3Client, S3ClientBuilder, Bu
                 S3Client.builder().credentialsProvider(account).region(Region.of(region)).build());
       }
     }
-
     enrich(
         map,
         "bucketEncryption",
@@ -106,12 +94,6 @@ public class AwsS3BucketScanner extends AwsScanner<S3Client, S3ClientBuilder, Bu
         GetBucketEncryptionResponse::serverSideEncryptionConfiguration,
         GetBucketEncryptionRequest.builder().bucket(bucket.name()).build());
 
-    enrich(
-        map,
-        "publicAccessBlockConfiguration",
-        client::getPublicAccessBlock,
-        GetPublicAccessBlockResponse::publicAccessBlockConfiguration,
-        GetPublicAccessBlockRequest.builder().bucket(bucket.name()).build());
 
     enrich(
         map,
@@ -120,6 +102,30 @@ public class AwsS3BucketScanner extends AwsScanner<S3Client, S3ClientBuilder, Bu
         GetBucketReplicationResponse::replicationConfiguration,
         GetBucketReplicationRequest.builder().bucket(bucket.name()).build());
 
+    // Add BucketReplicationLocation to map
+    var bucketReplication = (AssetProperties) map.getProperties().getOrDefault("bucketReplication", Collections.emptyList());
+    var rules = (ArrayList)bucketReplication.getOrDefault("rules", Collections.emptyList());
+
+    for ( var rule : rules) {
+      var replicationDestination = (HashMap) ((HashMap) rule).get("destination");
+      var replicationDestinationBucket = replicationDestination.get("bucket");
+
+      ((HashMap) rule).put("bucketReplicationLocation",
+              client.getBucketLocation(GetBucketLocationRequest.builder().bucket(replicationDestinationBucket.toString()).build()).locationConstraintAsString());
+
+      // Wenn man es so nutzt, dann wird der neue Eintrag auf die gleiche Ebene wie rules geschrieben. In die Rules
+      // rein, bekomme ich es nicht, da ich die keys nicht konkatenieren kann und nicht das rule-Objekt als Asset
+      // übergeben kann.
+      /*enrichSimple(
+              map,
+              "bucketReplicationLocation",
+              client::getBucketLocation,
+              GetBucketLocationResponse::locationConstraint,
+              GetBucketLocationRequest.builder().bucket(replicationDestinationBucket.toString())
+              .build());
+      */
+    }
+
     enrichList(
         map,
         "lifecycleConfiguration",
@@ -127,6 +133,9 @@ public class AwsS3BucketScanner extends AwsScanner<S3Client, S3ClientBuilder, Bu
         GetBucketLifecycleConfigurationResponse::rules,
         GetBucketLifecycleConfigurationRequest.builder().bucket(bucket.name()).build());
 
+    System.out.println("MAP-FINISHED: " + map);
+    System.out.println();
     return map;
   }
+
 }

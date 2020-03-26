@@ -27,34 +27,19 @@
 
 package io.clouditor.discovery.aws;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.when;
-
 import io.clouditor.assurance.RuleService;
 import io.clouditor.util.FileSystemManager;
-import java.io.IOException;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentMatchers;
 import software.amazon.awssdk.awscore.exception.AwsServiceException;
 import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.Bucket;
-import software.amazon.awssdk.services.s3.model.GetBucketEncryptionRequest;
-import software.amazon.awssdk.services.s3.model.GetBucketEncryptionResponse;
-import software.amazon.awssdk.services.s3.model.GetBucketLifecycleConfigurationRequest;
-import software.amazon.awssdk.services.s3.model.GetBucketReplicationRequest;
-import software.amazon.awssdk.services.s3.model.GetBucketReplicationResponse;
-import software.amazon.awssdk.services.s3.model.GetPublicAccessBlockRequest;
-import software.amazon.awssdk.services.s3.model.GetPublicAccessBlockResponse;
-import software.amazon.awssdk.services.s3.model.ListBucketsResponse;
-import software.amazon.awssdk.services.s3.model.PublicAccessBlockConfiguration;
-import software.amazon.awssdk.services.s3.model.ReplicationConfiguration;
-import software.amazon.awssdk.services.s3.model.ServerSideEncryption;
-import software.amazon.awssdk.services.s3.model.ServerSideEncryptionByDefault;
-import software.amazon.awssdk.services.s3.model.ServerSideEncryptionConfiguration;
-import software.amazon.awssdk.services.s3.model.ServerSideEncryptionRule;
+import software.amazon.awssdk.services.s3.model.*;
+
+import java.io.IOException;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.when;
 
 class AwsS3BucketScannerTest extends AwsScannerTest {
 
@@ -118,11 +103,108 @@ class AwsS3BucketScannerTest extends AwsScannerTest {
                           PublicAccessBlockConfiguration.builder().build())
                       .build());
 
-          when(api.getBucketReplication(ArgumentMatchers.any(GetBucketReplicationRequest.class)))
-              .thenReturn(
-                  GetBucketReplicationResponse.builder()
-                      .replicationConfiguration(ReplicationConfiguration.builder().build())
-                      .build());
+            when(api.getBucketReplication(
+                    GetBucketReplicationRequest.builder().bucket("Bucket-A").build()))
+                    .thenReturn(
+                            GetBucketReplicationResponse.builder()
+                                    .replicationConfiguration(
+                                            ReplicationConfiguration.builder()
+                                                    .role("test-role")
+                                                    .rules(
+                                                            ReplicationRule.builder()
+                                                                    .id("234")
+                                                                    .status(ReplicationRuleStatus.ENABLED)
+                                                                    .priority(1)
+                                                                    .deleteMarkerReplication(
+                                                                            DeleteMarkerReplication.builder()
+                                                                                    .status(DeleteMarkerReplicationStatus.DISABLED).build())
+                                                                    .filter(ReplicationRuleFilter.builder().prefix("test").build())
+                                                                    .destination(Destination.builder()
+                                                                            .bucket("Bucket-A").build())
+                                                                    .build(),
+                                                            ReplicationRule.builder()
+                                                                    .id("123")
+                                                                    .status(ReplicationRuleStatus.ENABLED)
+                                                                    .priority(1)
+                                                                    .deleteMarkerReplication(
+                                                                            DeleteMarkerReplication.builder()
+                                                                                    .status(DeleteMarkerReplicationStatus.DISABLED).build())
+                                                                    .filter(ReplicationRuleFilter.builder().prefix("test").build())
+                                                                    .destination(Destination.builder()
+                                                                            .bucket("Bucket-B").build())
+                                                                        .build())
+                                                    .build())
+                                    .build());
+
+            when(api.getBucketReplication(
+                    GetBucketReplicationRequest.builder().bucket("Bucket-B").build()))
+                    .thenReturn(
+                            GetBucketReplicationResponse.builder()
+                                    .replicationConfiguration(
+                                            ReplicationConfiguration.builder()
+                                                    .role("test-role")
+                                                    .rules(
+                                                            ReplicationRule.builder()
+                                                                    .id("234")
+                                                                    .status(ReplicationRuleStatus.ENABLED)
+                                                                    .priority(1)
+                                                                    .deleteMarkerReplication(
+                                                                            DeleteMarkerReplication.builder()
+                                                                                    .status(DeleteMarkerReplicationStatus.DISABLED).build())
+                                                                    .filter(ReplicationRuleFilter.builder().prefix("test").build())
+                                                                    .destination(Destination.builder()
+                                                                            .bucket("Bucket-A").build())
+                                                                    .build())
+                                                    .build())
+                                    .build());
+
+            when(api.getBucketReplication(
+                    GetBucketReplicationRequest.builder().bucket("Bucket-C").build()))
+                    .thenReturn(
+                            GetBucketReplicationResponse.builder()
+                                    .replicationConfiguration(
+                                            ReplicationConfiguration.builder()
+                                                    .role("test-role")
+                                                    .rules(
+                                                            ReplicationRule.builder()
+                                                                    .id("234")
+                                                                    .status(ReplicationRuleStatus.ENABLED)
+                                                                    .priority(1)
+                                                                    .deleteMarkerReplication(
+                                                                            DeleteMarkerReplication.builder()
+                                                                                    .status(DeleteMarkerReplicationStatus.DISABLED).build())
+                                                                    .filter(ReplicationRuleFilter.builder().prefix("test").build())
+                                                                    .destination(Destination.builder()
+                                                                            .bucket("Bucket-A").build())
+                                                                    .build(),
+                                                            ReplicationRule.builder()
+                                                                    .id("123")
+                                                                    .status(ReplicationRuleStatus.ENABLED)
+                                                                    .priority(1)
+                                                                    .deleteMarkerReplication(
+                                                                            DeleteMarkerReplication.builder()
+                                                                                    .status(DeleteMarkerReplicationStatus.DISABLED).build())
+                                                                    .filter(ReplicationRuleFilter.builder().prefix("test").build())
+                                                                    .destination(Destination.builder()
+                                                                            .bucket("Bucket-B").build())
+                                                                    .build())
+                                                    .build())
+                                    .build());
+
+            when(api.getBucketLocation(
+                    GetBucketLocationRequest.builder().bucket("Bucket-A").build()))
+                    .thenReturn(GetBucketLocationResponse.builder().locationConstraint(BucketLocationConstraint.EU)
+                    .build());
+
+            when(api.getBucketLocation(
+                    GetBucketLocationRequest.builder().bucket("Bucket-B").build()))
+                    .thenReturn(GetBucketLocationResponse.builder().locationConstraint(BucketLocationConstraint.US_WEST_2)
+                            .build());
+
+            when(api.getBucketLocation(
+                    GetBucketLocationRequest.builder().bucket("Bucket-C").build()))
+                    .thenReturn(GetBucketLocationResponse.builder().locationConstraint(BucketLocationConstraint.EU)
+                            .build());
 
           when(api.getBucketLifecycleConfiguration(
                   (GetBucketLifecycleConfigurationRequest) ArgumentMatchers.any()))
@@ -143,9 +225,11 @@ class AwsS3BucketScannerTest extends AwsScannerTest {
 
     var bucketA = assets.get("arn:aws:s3:::Bucket-A");
 
+    System.out.println("rule: " + bucketA);
     assertNotNull(bucketA);
     assertTrue(rule.evaluate(bucketA).isOk());
 
+    // TODO Wieder einkommentieren, wenn fertig.
     var bucketB = assets.get("arn:aws:s3:::Bucket-B");
 
     assertNotNull(bucketB);
