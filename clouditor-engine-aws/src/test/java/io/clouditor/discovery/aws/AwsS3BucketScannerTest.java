@@ -210,7 +210,7 @@ class AwsS3BucketScannerTest extends AwsScannerTest {
           when(api.getBucketLocation(GetBucketLocationRequest.builder().bucket("Bucket-C").build()))
               .thenReturn(
                   GetBucketLocationResponse.builder()
-                      .locationConstraint(BucketLocationConstraint.EU_WEST_1)
+                      .locationConstraint(BucketLocationConstraint.EU_CENTRAL_1)
                       .build());
 
           when(api.getBucketLifecycleConfiguration(
@@ -234,6 +234,16 @@ class AwsS3BucketScannerTest extends AwsScannerTest {
 
     assertNotNull(bucketA);
     assertTrue(rule.evaluate(bucketA).isOk());
+
+    var bucketB = assets.get("arn:aws:s3:::Bucket-B");
+
+    assertNotNull(bucketB);
+    assertTrue(rule.evaluate(bucketB).isOk());
+
+    var bucketC = assets.get("arn:aws:s3:::Bucket-C");
+
+    assertNotNull(bucketC);
+    assertTrue(rule.evaluate(bucketC).isOk());
   }
 
   @Test

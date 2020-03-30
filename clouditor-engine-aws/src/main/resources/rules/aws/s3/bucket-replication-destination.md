@@ -3,5 +3,5 @@
 By default, data should be replicated to same region.
 
 ```ccl
-Bucket has location contains "eu" in all bucketReplication.rules
+Bucket has (replicationBucketInSameRegion == true) in all bucketReplication.rules
 ```

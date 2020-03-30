@@ -33,13 +33,12 @@ import io.clouditor.discovery.AssetProperties;
 import io.clouditor.discovery.ScanException;
 import io.clouditor.discovery.ScannerInfo;
 import io.clouditor.util.PersistenceManager;
+import java.util.*;
 import software.amazon.awssdk.core.exception.SdkClientException;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.S3ClientBuilder;
 import software.amazon.awssdk.services.s3.model.*;
-
-import java.util.*;
 
 @ScannerInfo(assetType = "Bucket", group = "AWS", service = "S3", assetIcon = "fas fa-archive")
 public class AwsS3BucketScanner extends AwsScanner<S3Client, S3ClientBuilder, Bucket> {
@@ -108,40 +107,41 @@ public class AwsS3BucketScanner extends AwsScanner<S3Client, S3ClientBuilder, Bu
         GetBucketReplicationResponse::replicationConfiguration,
         GetBucketReplicationRequest.builder().bucket(bucket.name()).build());
 
-    // Add BucketReplicationLocation to map
+    // Add boolean "replicationBucketInSameRegion" to map
     var bucketReplication =
         (AssetProperties)
             map.getProperties().getOrDefault("bucketReplication", Collections.emptyList());
     var rules = (ArrayList) bucketReplication.getOrDefault("rules", Collections.emptyList());
 
     for (var rule : rules) {
-      var replicationDestination = (HashMap) ((HashMap) rule).get("destination");
-      var replicationDestinationBucket = replicationDestination.get("bucket");
+      var replicationDestinationBucket =
+          ((HashMap) ((HashMap) rule).get("destination")).get("bucket");
+      var replicationDestinationBucketRegionPrefix =
+          map.getProperties().get("locationConstraint").toString().split("(?<=-)")[0];
 
-      ((HashMap) rule)
-          .put(
-              "bucketReplicationLocation",
-              client
-                  .getBucketLocation(
-                      GetBucketLocationRequest.builder()
-                          .bucket(replicationDestinationBucket.toString())
-                          .build())
-                  .locationConstraintAsString());
+      if (client
+          .getBucketLocation(
+              GetBucketLocationRequest.builder()
+                  .bucket(replicationDestinationBucket.toString())
+                  .build())
+          .locationConstraintAsString()
+          .startsWith(replicationDestinationBucketRegionPrefix)) {
 
-      // Wenn man es so nutzt, dann wird der neue Eintrag auf die gleiche Ebene wie rules
-      // geschrieben. In die Rules
-      // rein, bekomme ich es nicht, da ich die keys nicht konkatenieren kann und nicht das
-      // rule-Objekt als Asset
-      // übergeben kann.
-      //      enrichSimple(
-      //              rule,
+        ((HashMap) rule).put("replicationBucketInSameRegion", true);
+      } else {
+        ((HashMap) rule).put("replicationBucketInSameRegion", false);
+      }
+
+      // TODO:  as long as the logic is in here, bucketReplicationLocation is no longer needed
+      //      ((HashMap) rule)
+      //          .put(
       //              "bucketReplicationLocation",
-      //              client::getBucketLocation,
-      //              GetBucketLocationResponse::locationConstraint,
-      //
-      // GetBucketLocationRequest.builder().bucket(replicationDestinationBucket.toString())
-      //              .build());
-
+      //              client
+      //                  .getBucketLocation(
+      //                      GetBucketLocationRequest.builder()
+      //                          .bucket(replicationDestinationBucket.toString())
+      //                          .build())
+      //                  .locationConstraintAsString());
     }
 
     enrichList(
@@ -151,8 +151,6 @@ public class AwsS3BucketScanner extends AwsScanner<S3Client, S3ClientBuilder, Bu
         GetBucketLifecycleConfigurationResponse::rules,
         GetBucketLifecycleConfigurationRequest.builder().bucket(bucket.name()).build());
 
-    System.out.println("MAP-FINISHED: " + map);
-    System.out.println();
     return map;
   }
 }
