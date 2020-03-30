@@ -33,12 +33,13 @@ import io.clouditor.discovery.AssetProperties;
 import io.clouditor.discovery.ScanException;
 import io.clouditor.discovery.ScannerInfo;
 import io.clouditor.util.PersistenceManager;
-import java.util.*;
 import software.amazon.awssdk.core.exception.SdkClientException;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.S3ClientBuilder;
 import software.amazon.awssdk.services.s3.model.*;
+
+import java.util.*;
 
 @ScannerInfo(assetType = "Bucket", group = "AWS", service = "S3", assetIcon = "fas fa-archive")
 public class AwsS3BucketScanner extends AwsScanner<S3Client, S3ClientBuilder, Bucket> {
@@ -92,6 +93,13 @@ public class AwsS3BucketScanner extends AwsScanner<S3Client, S3ClientBuilder, Bu
         client::getBucketEncryption,
         GetBucketEncryptionResponse::serverSideEncryptionConfiguration,
         GetBucketEncryptionRequest.builder().bucket(bucket.name()).build());
+
+    enrichSimple(
+        map,
+        "locationConstraint",
+        client::getBucketLocation,
+        GetBucketLocationResponse::locationConstraint,
+        GetBucketLocationRequest.builder().bucket(bucket.name()).build());
 
     enrich(
         map,
