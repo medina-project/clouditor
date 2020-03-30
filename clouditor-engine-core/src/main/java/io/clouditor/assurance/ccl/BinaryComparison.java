@@ -90,6 +90,9 @@ public class BinaryComparison extends Comparison {
         if (fieldValue instanceof String && value.getValue() instanceof CharSequence) {
           return ((String) fieldValue).contains((CharSequence) value.getValue());
         }
+        if (fieldValue instanceof Enum && value.getValue() instanceof CharSequence) {
+          return ((Enum) fieldValue).toString().contains((CharSequence) value.getValue());
+        }
         // TODO: throw exception here?
         return false;
       case NOT_EQUALS:
@@ -103,6 +106,13 @@ public class BinaryComparison extends Comparison {
       case GREATER_THAN_OR_EQUALS:
         return longOf(fieldValue) >= longOf(value.getValue());
       case EQUALS:
+        if (fieldValue instanceof String && value.getValue() instanceof CharSequence) {
+          return ((String) fieldValue).equals((CharSequence) value.getValue());
+        }
+        if (fieldValue instanceof Enum && value.getValue() instanceof CharSequence) {
+          return ((Enum) fieldValue).toString().equals((CharSequence) value.getValue());
+        }
+        return false;
       default:
         return Objects.equals(fieldValue, value.getValue());
     }
