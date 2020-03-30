@@ -112,7 +112,7 @@ public class BinaryComparison extends Comparison {
         if (fieldValue instanceof Enum && value.getValue() instanceof CharSequence) {
           return ((Enum) fieldValue).toString().equals((CharSequence) value.getValue());
         }
-        return false;
+        return Objects.equals(fieldValue, value.getValue());
       default:
         return Objects.equals(fieldValue, value.getValue());
     }
