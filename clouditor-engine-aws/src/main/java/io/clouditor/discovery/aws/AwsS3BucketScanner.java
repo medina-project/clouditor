@@ -130,7 +130,8 @@ public class AwsS3BucketScanner extends AwsScanner<S3Client, S3ClientBuilder, Bu
         (ArrayList<AssetProperties>)
             map.getProperties().getOrDefault("listBucketResult", new ArrayList<>());
 
-    // If no objects exist, add an empty 'listBucketResult'. Otherwise, the evaluation will not work
+    // If no objects exist, add an empty 'listBucketResult'. Otherwise, the evaluation will not
+    // work.
     if (objectList.isEmpty()) {
       map.getProperties().put("listBucketResult", new ArrayList<>());
     }
