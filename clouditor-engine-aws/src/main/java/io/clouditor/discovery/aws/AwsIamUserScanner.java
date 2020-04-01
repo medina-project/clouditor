@@ -34,15 +34,7 @@ import io.clouditor.discovery.ScannerInfo;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import software.amazon.awssdk.services.iam.model.GetAccessKeyLastUsedRequest;
-import software.amazon.awssdk.services.iam.model.GetAccessKeyLastUsedResponse;
-import software.amazon.awssdk.services.iam.model.ListAccessKeysRequest;
-import software.amazon.awssdk.services.iam.model.ListAccessKeysResponse;
-import software.amazon.awssdk.services.iam.model.ListGroupsForUserRequest;
-import software.amazon.awssdk.services.iam.model.ListGroupsForUserResponse;
-import software.amazon.awssdk.services.iam.model.ListMfaDevicesRequest;
-import software.amazon.awssdk.services.iam.model.ListMfaDevicesResponse;
-import software.amazon.awssdk.services.iam.model.User;
+import software.amazon.awssdk.services.iam.model.*;
 
 @ScannerInfo(assetType = "User", group = "AWS", service = "IAM", assetIcon = "fas fa-user")
 public class AwsIamUserScanner extends AwsIamScanner<User> {
@@ -81,10 +73,13 @@ public class AwsIamUserScanner extends AwsIamScanner<User> {
         ListAccessKeysResponse::accessKeyMetadata,
         ListAccessKeysRequest.builder().userName(user.userName()).build());
 
+    System.out.println("asset: " + asset);
     // TODO: this should probably be in a separate scanner
     var keys =
         (ArrayList<AssetProperties>)
             asset.getProperties().getOrDefault("accessKeys", Collections.emptyList());
+
+    System.out.println("keys: " + keys);
 
     for (var key : keys) {
       enrich(
@@ -96,6 +91,8 @@ public class AwsIamUserScanner extends AwsIamScanner<User> {
               .accessKeyId(String.valueOf(key.get("accessKeyId")))
               .build());
     }
+
+    System.out.println("asset 2: " + asset);
 
     return asset;
   }

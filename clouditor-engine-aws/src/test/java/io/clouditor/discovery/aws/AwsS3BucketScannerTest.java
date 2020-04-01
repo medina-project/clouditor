@@ -27,34 +27,19 @@
 
 package io.clouditor.discovery.aws;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.when;
-
 import io.clouditor.assurance.RuleService;
 import io.clouditor.util.FileSystemManager;
-import java.io.IOException;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentMatchers;
 import software.amazon.awssdk.awscore.exception.AwsServiceException;
 import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.Bucket;
-import software.amazon.awssdk.services.s3.model.GetBucketEncryptionRequest;
-import software.amazon.awssdk.services.s3.model.GetBucketEncryptionResponse;
-import software.amazon.awssdk.services.s3.model.GetBucketLifecycleConfigurationRequest;
-import software.amazon.awssdk.services.s3.model.GetBucketReplicationRequest;
-import software.amazon.awssdk.services.s3.model.GetBucketReplicationResponse;
-import software.amazon.awssdk.services.s3.model.GetPublicAccessBlockRequest;
-import software.amazon.awssdk.services.s3.model.GetPublicAccessBlockResponse;
-import software.amazon.awssdk.services.s3.model.ListBucketsResponse;
-import software.amazon.awssdk.services.s3.model.PublicAccessBlockConfiguration;
-import software.amazon.awssdk.services.s3.model.ReplicationConfiguration;
-import software.amazon.awssdk.services.s3.model.ServerSideEncryption;
-import software.amazon.awssdk.services.s3.model.ServerSideEncryptionByDefault;
-import software.amazon.awssdk.services.s3.model.ServerSideEncryptionConfiguration;
-import software.amazon.awssdk.services.s3.model.ServerSideEncryptionRule;
+import software.amazon.awssdk.services.s3.model.*;
+
+import java.io.IOException;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.when;
 
 class AwsS3BucketScannerTest extends AwsScannerTest {
 
@@ -127,7 +112,90 @@ class AwsS3BucketScannerTest extends AwsScannerTest {
           when(api.getBucketLifecycleConfiguration(
                   (GetBucketLifecycleConfigurationRequest) ArgumentMatchers.any()))
               .thenThrow(AwsServiceException.builder().statusCode(404).build());
+
+          when(api.listObjects(ListObjectsRequest.builder().bucket("Bucket-A").build()))
+              .thenReturn(
+                  ListObjectsResponse.builder()
+                      .name("Bucket-A")
+                      .contents(
+                          S3Object.builder().key("image1.jpg").build(),
+                          S3Object.builder().key("image2.jpg").build(),
+                          S3Object.builder().key("image3.jpg").build(),
+                          S3Object.builder().key("image4.jpg").build(),
+                          S3Object.builder().key("image5.jpg").build())
+                      .build());
+
+          when(api.listObjects(ListObjectsRequest.builder().bucket("Bucket-B").build()))
+              .thenReturn(
+                  ListObjectsResponse.builder()
+                      .name("Bucket-A")
+                      .contents(
+                          S3Object.builder().key("image1.jpg").build(),
+                          S3Object.builder().key("image2.jpg").build(),
+                          S3Object.builder().key("image3.jpg").build(),
+                          S3Object.builder().key("image4.jpg").build(),
+                          S3Object.builder().key("image5.jpg").build())
+                      .build());
+
+          when(api.listObjects((ListObjectsRequest.builder().bucket("Bucket-C").build())))
+              .thenThrow(AwsServiceException.builder().statusCode(404).build());
+
+          //                    when(api.headObject(
+          //                            (HeadObjectRequest) ArgumentMatchers.any()))
+          //                            .thenReturn(
+          //                                    HeadObjectResponse.builder()
+          //
+          // .replicationStatus(ReplicationStatus.REPLICA)
+          //                                            .build());
+
+          when(api.headObject(
+                  HeadObjectRequest.builder().bucket("Bucket-A").key("image1.jpg").build()))
+              .thenReturn(
+                  HeadObjectResponse.builder()
+                      .replicationStatus(ReplicationStatus.REPLICA)
+                      .build());
+
+          when(api.headObject(
+                  HeadObjectRequest.builder().bucket("Bucket-A").key("image2.jpg").build()))
+              .thenReturn(
+                  HeadObjectResponse.builder()
+                      .replicationStatus(ReplicationStatus.REPLICA)
+                      .build());
+
+          when(api.headObject(
+                  HeadObjectRequest.builder().bucket("Bucket-A").key("image3.jpg").build()))
+              .thenReturn(
+                  HeadObjectResponse.builder()
+                      .replicationStatus(ReplicationStatus.REPLICA)
+                      .build());
         });
+  }
+
+  @Test
+  void testBucketReplicationCheck() throws IOException {
+    var rule =
+        this.engine
+            .getService(RuleService.class)
+            .loadRule(
+                FileSystemManager.getInstance()
+                    .getPathForResource("rules/aws/s3/bucket-source-bucket-exist.md"));
+
+    assertNotNull(rule);
+
+    var bucketA = assets.get("arn:aws:s3:::Bucket-A");
+
+    assertNotNull(bucketA);
+    assertTrue(rule.evaluate(bucketA).isOk());
+
+    var bucketB = assets.get("arn:aws:s3:::Bucket-B");
+
+    assertNotNull(bucketB);
+    assertTrue(rule.evaluate(bucketB).isOk());
+
+    var bucketC = assets.get("arn:aws:s3:::Bucket-C");
+
+    assertNotNull(bucketC);
+    assertTrue(rule.evaluate(bucketC).isOk());
   }
 
   @Test

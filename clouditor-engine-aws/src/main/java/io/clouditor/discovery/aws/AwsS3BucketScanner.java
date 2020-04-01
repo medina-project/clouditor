@@ -29,28 +29,20 @@ package io.clouditor.discovery.aws;
 
 import io.clouditor.credentials.AwsAccount;
 import io.clouditor.discovery.Asset;
+import io.clouditor.discovery.AssetProperties;
 import io.clouditor.discovery.ScanException;
 import io.clouditor.discovery.ScannerInfo;
 import io.clouditor.util.PersistenceManager;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import software.amazon.awssdk.core.exception.SdkClientException;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.S3ClientBuilder;
-import software.amazon.awssdk.services.s3.model.Bucket;
-import software.amazon.awssdk.services.s3.model.GetBucketEncryptionRequest;
-import software.amazon.awssdk.services.s3.model.GetBucketEncryptionResponse;
-import software.amazon.awssdk.services.s3.model.GetBucketLifecycleConfigurationRequest;
-import software.amazon.awssdk.services.s3.model.GetBucketLifecycleConfigurationResponse;
-import software.amazon.awssdk.services.s3.model.GetBucketReplicationRequest;
-import software.amazon.awssdk.services.s3.model.GetBucketReplicationResponse;
-import software.amazon.awssdk.services.s3.model.GetPublicAccessBlockRequest;
-import software.amazon.awssdk.services.s3.model.GetPublicAccessBlockResponse;
-import software.amazon.awssdk.services.s3.model.HeadBucketRequest;
-import software.amazon.awssdk.services.s3.model.ListBucketsRequest;
-import software.amazon.awssdk.services.s3.model.S3Exception;
+import software.amazon.awssdk.services.s3.model.*;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @ScannerInfo(assetType = "Bucket", group = "AWS", service = "S3", assetIcon = "fas fa-archive")
 public class AwsS3BucketScanner extends AwsScanner<S3Client, S3ClientBuilder, Bucket> {
@@ -127,6 +119,52 @@ public class AwsS3BucketScanner extends AwsScanner<S3Client, S3ClientBuilder, Bu
         GetBucketLifecycleConfigurationResponse::rules,
         GetBucketLifecycleConfigurationRequest.builder().bucket(bucket.name()).build());
 
+    enrichList(
+        map,
+        "listBucketResult",
+        client::listObjects,
+        ListObjectsResponse::contents,
+        ListObjectsRequest.builder().bucket(bucket.name()).build());
+
+    // Add replicationStatus to objects
+    // TODO: Warum funktioniert der dritte Testfall mit assetFalse nicht, nur weil keine Objekte
+    // vorhanden sind.
+
+    var objectList =
+        (ArrayList<AssetProperties>)
+            map.getProperties().getOrDefault("listBucketResult", new ArrayList<>());
+
+    if (objectList.isEmpty()) {
+
+    }
+
+    for (var object : objectList) {
+      String replicationStatus;
+
+      try {
+        replicationStatus =
+            client
+                .headObject(
+                    HeadObjectRequest.builder()
+                        .bucket(bucket.name())
+                        .key(object.get("key").toString())
+                        .build())
+                .replicationStatusAsString();
+
+      } catch (NullPointerException e) {
+        // ignore , sind this just means that the object does not have a replicationStatus
+        replicationStatus = "";
+      }
+
+      if (replicationStatus.equals(ReplicationStatus.REPLICA.toString())
+          || replicationStatus.isEmpty()) {
+        object.put("replicatedObject", true);
+      } else {
+        object.put("replicatedObject", false);
+      }
+    }
+
+    System.out.println("map: " + map);
     return map;
   }
 }
