@@ -126,14 +126,14 @@ public class AwsS3BucketScanner extends AwsScanner<S3Client, S3ClientBuilder, Bu
         ListObjectsRequest.builder().bucket(bucket.name()).build());
 
     // Add replicationStatus to objects
-    // TODO: Warum funktioniert der dritte Testfall mit assetFalse nicht, nur weil keine Objekte
-    // vorhanden sind.
-
     var objectList =
         (ArrayList<AssetProperties>)
             map.getProperties().getOrDefault("listBucketResult", new ArrayList<>());
 
-    if (objectList.isEmpty()) {}
+    // If no objects exist, add an empty 'listBucketResult'. Otherwise, the evaluation will not work
+    if (objectList.isEmpty()) {
+      map.getProperties().put("listBucketResult", new ArrayList<>());
+    }
 
     for (var object : objectList) {
       String replicationStatus;
@@ -149,7 +149,7 @@ public class AwsS3BucketScanner extends AwsScanner<S3Client, S3ClientBuilder, Bu
                 .replicationStatusAsString();
 
       } catch (NullPointerException e) {
-        // ignore , sind this just means that the object does not have a replicationStatus
+        // ignore, since this just means that the object does not have a replicationStatus
         replicationStatus = "";
       }
 
@@ -161,7 +161,6 @@ public class AwsS3BucketScanner extends AwsScanner<S3Client, S3ClientBuilder, Bu
       }
     }
 
-    System.out.println("map: " + map);
     return map;
   }
 }
