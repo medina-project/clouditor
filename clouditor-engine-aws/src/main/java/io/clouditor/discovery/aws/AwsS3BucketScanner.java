@@ -33,16 +33,15 @@ import io.clouditor.discovery.AssetProperties;
 import io.clouditor.discovery.ScanException;
 import io.clouditor.discovery.ScannerInfo;
 import io.clouditor.util.PersistenceManager;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import software.amazon.awssdk.core.exception.SdkClientException;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.S3ClientBuilder;
 import software.amazon.awssdk.services.s3.model.*;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 @ScannerInfo(assetType = "Bucket", group = "AWS", service = "S3", assetIcon = "fas fa-archive")
 public class AwsS3BucketScanner extends AwsScanner<S3Client, S3ClientBuilder, Bucket> {
@@ -134,9 +133,7 @@ public class AwsS3BucketScanner extends AwsScanner<S3Client, S3ClientBuilder, Bu
         (ArrayList<AssetProperties>)
             map.getProperties().getOrDefault("listBucketResult", new ArrayList<>());
 
-    if (objectList.isEmpty()) {
-
-    }
+    if (objectList.isEmpty()) {}
 
     for (var object : objectList) {
       String replicationStatus;

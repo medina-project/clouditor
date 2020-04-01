@@ -3,7 +3,7 @@
 Replicated Buckets should have corresponding source buckets.
 
 ```ccl
-Bucket with (not empty listBucketResult) has (replicatedObject == true)
+Bucket with (listBucketResult) has (replicatedObject == true) in all listBucketResult
 ```
 
-[comment] Bucket has (replicatedObject == true) in any listBucketResult
+[comment] Bucket has (replicatedObject == true) in all listBucketResult
