@@ -28,6 +28,7 @@
 package io.clouditor.rest;
 
 import static io.clouditor.auth.AuthenticationService.ROLE_ADMIN;
+import static io.clouditor.rest.AbstractAPI.LOGGER;
 import static io.clouditor.rest.AbstractAPI.sanitize;
 
 import io.clouditor.credentials.AccountService;
@@ -92,11 +93,14 @@ public class AccountsResource {
   @Consumes(MediaType.APPLICATION_JSON)
   @Path("{provider}")
   public void putAccount(@PathParam("provider") String provider, CloudAccount account) {
+    LOGGER.info("AccountsResource; Add account for provider {}", provider);
+
     provider = sanitize(provider);
 
     try {
-      this.service.addAccount(provider, account);
+      this.service.addAccounts(provider, account, System.getenv("ROLE_ARN"));
     } catch (IOException ex) {
+      LOGGER.info("Something went wrong while trying to add the account");
       throw new BadRequestException(
           Response.status(Status.BAD_REQUEST).entity(ex.getMessage()).build());
     }

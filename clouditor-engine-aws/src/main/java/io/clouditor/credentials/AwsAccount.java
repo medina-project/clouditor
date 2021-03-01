@@ -143,6 +143,10 @@ public class AwsAccount extends CloudAccount<AwsCredentials>
     return this.region;
   }
 
+  public void setRegion(String region) {
+    this.region = region;
+  }
+
   public void setAccessKeyId(String accessKeyId) {
     this.accessKeyId = accessKeyId;
   }

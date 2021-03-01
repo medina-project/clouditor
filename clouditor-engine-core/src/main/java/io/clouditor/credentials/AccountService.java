@@ -100,6 +100,35 @@ public class AccountService {
 
     // TODO: check, if something actually has changed
     new HibernatePersistence().saveOrUpdate(account);
+    LOGGER.info(
+        "CCurrent IDs of CLoud Accounts: {}",
+        new HibernatePersistence().listAll(CloudAccount.class));
+
+    // since we changed the account (potentially), we need to make sure the scanners associated with
+    // this provider re-authenticate properly
+    for (var scanner : this.discoveryService.getScanners()) {
+      var info = scanner.getInfo();
+
+      if (scanner.getInitialized() && Objects.equals(info.group(), provider)) {
+        LOGGER.info("Forcing scanner {} to re-authenticate.", scanner.getId());
+        scanner.setInitialized(false);
+      }
+    }
+  }
+
+  public void addAccounts(String provider, CloudAccount account, String role_arn)
+      throws IOException {
+    LOGGER.info("Trying to validate auditor account for provider {}...", provider);
+
+    account.validate();
+
+    LOGGER.info("Adding ARN account for provider {} with id {}", provider, account.getId());
+
+    new HibernatePersistence().saveOrUpdate(account);
+
+    LOGGER.info(
+        "Current IDs of CLoud Accounts: {}",
+        new HibernatePersistence().listAll(CloudAccount.class));
 
     // since we changed the account (potentially), we need to make sure the scanners associated with
     // this provider re-authenticate properly
