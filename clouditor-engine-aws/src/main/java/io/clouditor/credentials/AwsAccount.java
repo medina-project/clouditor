@@ -158,11 +158,13 @@ public class AwsAccount extends CloudAccount<AwsCredentials>
   @Override
   public String toString() {
     return new ToStringBuilder(this)
+        .append("id", myId)
         .append("accessKeyId", accessKeyId)
         .append("secretAccessKey", secretAccessKey)
         .append("region", region)
         .append("accountId", accountId)
         .append("user", user)
+        .append("scan", scan)
         .toString();
   }
 

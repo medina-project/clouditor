@@ -93,7 +93,7 @@ public class AccountsResource {
   @Consumes(MediaType.APPLICATION_JSON)
   @Path("{provider}")
   public void putAccount(@PathParam("provider") String provider, CloudAccount account) {
-    LOGGER.info("AccountsResource; Add account for provider {}", provider);
+    LOGGER.info("AccountsResource: Add account for provider {}", provider);
 
     provider = sanitize(provider);
 

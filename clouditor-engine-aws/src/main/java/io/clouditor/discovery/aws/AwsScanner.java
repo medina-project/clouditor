@@ -152,9 +152,11 @@ public abstract class AwsScanner<
 
     var builder = this.builderSupplier.get();
 
+    // ToDo: Currently, PK is hardcoded but should get it from DB and loop? through all
+    LOGGER.info("Get Account from DB");
     var account =
         new HibernatePersistence()
-            .get(AwsAccount.class, "AWS")
+            .get(AwsAccount.class, "AWS_1")
             .orElseThrow(() -> SdkClientException.create("AWS account not configured"));
 
     // TODO: find a generic way to find which client is global

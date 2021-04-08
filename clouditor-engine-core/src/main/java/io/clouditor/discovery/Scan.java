@@ -28,6 +28,7 @@
 package io.clouditor.discovery;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.clouditor.credentials.CloudAccount;
 import io.clouditor.data_access_layer.PersistentObject;
 import java.lang.reflect.InvocationTargetException;
 import javax.persistence.*;
@@ -97,6 +98,19 @@ public class Scan implements PersistentObject<String> {
   @ManyToOne
   @JoinColumn(name = "last_result")
   private DiscoveryResult lastResult;
+
+  public CloudAccount getCloudAccount() {
+    return cloudAccount;
+  }
+
+  public void setCloudAccount(CloudAccount cloudAccount) {
+    this.cloudAccount = cloudAccount;
+  }
+
+  // ToDo: Is it really one to one?
+  @OneToOne(targetEntity = CloudAccount.class, cascade = CascadeType.ALL)
+  @JoinColumn
+  CloudAccount cloudAccount;
 
   @Column(name = "enabled")
   private boolean enabled;
@@ -201,6 +215,7 @@ public class Scan implements PersistentObject<String> {
         .append("lastResult", lastResult)
         .append("enabled", enabled)
         .append("interval", interval)
+        .append("Corresponding Cloud Account", cloudAccount)
         .toString();
   }
 

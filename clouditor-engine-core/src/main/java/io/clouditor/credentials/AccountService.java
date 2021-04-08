@@ -29,11 +29,13 @@ package io.clouditor.credentials;
 
 import io.clouditor.data_access_layer.HibernatePersistence;
 import io.clouditor.discovery.DiscoveryService;
+import io.clouditor.discovery.Scan;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 import javax.inject.Inject;
 import org.jvnet.hk2.annotations.Service;
 import org.slf4j.Logger;
@@ -123,12 +125,20 @@ public class AccountService {
     account.validate();
 
     LOGGER.info("Adding ARN account for provider {} with id {}", provider, account.getId());
+    LOGGER.info(account.toString());
 
+    account.setScan(new HibernatePersistence().get(Scan.class, "Volume").orElse(null));
     new HibernatePersistence().saveOrUpdate(account);
 
     LOGGER.info(
+        "Added account: {}", new HibernatePersistence().get(CloudAccount.class, account.getId()));
+
+    LOGGER.info(
         "Current IDs of CLoud Accounts: {}",
-        new HibernatePersistence().listAll(CloudAccount.class));
+        new HibernatePersistence()
+            .listAll(CloudAccount.class).stream()
+                .map(CloudAccount::getId)
+                .collect(Collectors.toList()));
 
     // since we changed the account (potentially), we need to make sure the scanners associated with
     // this provider re-authenticate properly

@@ -72,6 +72,10 @@ public class DiscoveryService {
   }
 
   public void init() {
+    LOGGER.info(
+        "{}:{} -> Initializing scans",
+        this.getClass().getSimpleName(),
+        new Throwable().getStackTrace()[0].getMethodName());
     final HibernatePersistence hibernatePersistence = new HibernatePersistence();
     var scans = hibernatePersistence.listAll(Scan.class);
 
@@ -81,6 +85,7 @@ public class DiscoveryService {
             .filter(
                 clazz -> !Modifier.isAbstract(clazz.getModifiers()) && !clazz.isAnonymousClass())
             .collect(Collectors.toList());
+    LOGGER.info("Scanner classes: {}", classes);
 
     // loop through existing scans to make sure that the associated scanner still exists
     for (var scan : scans) {
@@ -108,6 +113,8 @@ public class DiscoveryService {
         hibernatePersistence.saveOrUpdate(scan);
       }
     }
+    LOGGER.info("Scans in DB: {}", new HibernatePersistence().listAll(Scan.class));
+    LOGGER.info("Finished initializing scans.");
   }
 
   public Map<String, Scan> getScans() {
@@ -258,6 +265,8 @@ public class DiscoveryService {
   }
 
   public Scan getScan(final String assetTypeID) {
+    // ToDo: Remove LOGGER after debugging
+    LOGGER.info(new HibernatePersistence().get(Scan.class, assetTypeID));
     return new HibernatePersistence().get(Scan.class, assetTypeID).orElse(null);
   }
 

@@ -27,9 +27,11 @@
 
 package io.clouditor.credentials;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.clouditor.data_access_layer.PersistentObject;
+import io.clouditor.discovery.Scan;
 import io.clouditor.util.Collection;
 import java.io.IOException;
 import javax.persistence.Column;
@@ -37,6 +39,8 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
+import javax.persistence.JoinColumn;
+import javax.persistence.OneToOne;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,7 +61,33 @@ public abstract class CloudAccount<T> implements PersistentObject<String> {
   @Column(name = "cloud_user")
   protected String user;
 
-  @Column @Id protected String provider;
+  public void setId(String id) {
+    this.myId = id;
+  }
+
+  @Column @Id @JsonProperty protected String myId;
+
+  public String getProvider() {
+    return provider;
+  }
+
+  public void setProvider(String provider) {
+    this.provider = provider;
+  }
+
+  public Scan getScan() {
+    return scan;
+  }
+
+  public void setScan(Scan scan) {
+    this.scan = scan;
+  }
+
+  @OneToOne(targetEntity = Scan.class)
+  @JoinColumn
+  Scan scan;
+
+  @Column protected String provider;
 
   /**
    * Specifies that this account was auto-discovered and that credentials are provided by the
@@ -98,7 +128,7 @@ public abstract class CloudAccount<T> implements PersistentObject<String> {
   }
 
   public String getId() {
-    return this.provider;
+    return this.myId;
   }
 
   /**
