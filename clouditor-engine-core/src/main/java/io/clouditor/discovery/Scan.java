@@ -27,6 +27,7 @@
 
 package io.clouditor.discovery;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.clouditor.credentials.CloudAccount;
 import io.clouditor.data_access_layer.PersistentObject;
@@ -107,9 +108,8 @@ public class Scan implements PersistentObject<String> {
     this.cloudAccount = cloudAccount;
   }
 
-  // ToDo: Is it really one to one?
-  @OneToOne(targetEntity = CloudAccount.class, cascade = CascadeType.ALL)
-  @JoinColumn
+  // ToDo: Is it really many to one?
+  @ManyToOne(cascade = CascadeType.ALL)
   CloudAccount cloudAccount;
 
   @Column(name = "enabled")

@@ -29,7 +29,6 @@ package io.clouditor.credentials;
 
 import io.clouditor.data_access_layer.HibernatePersistence;
 import io.clouditor.discovery.DiscoveryService;
-import io.clouditor.discovery.Scan;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
@@ -127,7 +126,7 @@ public class AccountService {
     LOGGER.info("Adding ARN account for provider {} with id {}", provider, account.getId());
     LOGGER.info(account.toString());
 
-    account.setScan(new HibernatePersistence().get(Scan.class, "Volume").orElse(null));
+    account = discoveryService.initScansForNewAccount(account);
     new HibernatePersistence().saveOrUpdate(account);
 
     LOGGER.info(

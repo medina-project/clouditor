@@ -27,6 +27,7 @@
 
 package io.clouditor.discovery;
 
+import io.clouditor.credentials.CloudAccount;
 import io.clouditor.data_access_layer.HibernatePersistence;
 import io.clouditor.data_access_layer.PersistenceManager;
 import io.clouditor.events.DiscoveryResultSubscriber;
@@ -115,6 +116,62 @@ public class DiscoveryService {
     }
     LOGGER.info("Scans in DB: {}", new HibernatePersistence().listAll(Scan.class));
     LOGGER.info("Finished initializing scans.");
+  }
+
+  public CloudAccount initScansForNewAccount(CloudAccount cloudAccount) {
+    LOGGER.info(
+        "{}:{} -> Initializing scans for new account: {}",
+        this.getClass().getSimpleName(),
+        new Throwable().getStackTrace()[0].getMethodName(),
+        cloudAccount.getId());
+
+    final HibernatePersistence hibernatePersistence = new HibernatePersistence();
+    //    var scans = hibernatePersistence.listAll(Scan.class);
+
+    // first, init list of scanner classes from Java via reflections
+    var classes =
+        REFLECTIONS_SUBTYPE_SCANNER.getSubTypesOf(Scanner.class).stream()
+            .filter(
+                clazz -> !Modifier.isAbstract(clazz.getModifiers()) && !clazz.isAnonymousClass())
+            .collect(Collectors.toList());
+    LOGGER.info("Scanner classes: {}", classes);
+
+    // loop through existing scans to make sure that the associated scanner still exists
+    //    for (var scan : scans) {
+    //      if (!classes.contains(scan.getScannerClass())) {
+    //        LOGGER.info(
+    //            "Scan {} contains old or invalid scanner class {}. Removing entry from database.",
+    //            scan.getId(),
+    //            scan.getScannerClass());
+    //
+    //        hibernatePersistence.delete(scan);
+    //      }
+    //    }
+
+    // loop through all Scanner classes, to make sure a Scan object exists for each class
+    Set<Scan> scans = new HashSet<>();
+    for (var clazz : classes) {
+      //      var hasNoScannerForClass =
+      //          hibernatePersistence.listAll(Scan.class).stream()
+      //              .noneMatch(scan -> scan.getScannerClass().equals(clazz));
+
+      //      if (hasNoScannerForClass) {
+      // create new scanner object
+      var scan = Scan.fromScanner(clazz);
+      scan.setCloudAccount(cloudAccount);
+
+      // add scan to set of scans for cloudAccount
+      scans.add(scan);
+
+      // update database
+      hibernatePersistence.saveOrUpdate(scan);
+      //      }
+    }
+    LOGGER.info("Scans in DB: {}", new HibernatePersistence().listAll(Scan.class));
+    LOGGER.info("Finished initializing scans.");
+
+    cloudAccount.setScans(scans);
+    return cloudAccount;
   }
 
   public Map<String, Scan> getScans() {
@@ -266,7 +323,7 @@ public class DiscoveryService {
 
   public Scan getScan(final String assetTypeID) {
     // ToDo: Remove LOGGER after debugging
-    LOGGER.info(new HibernatePersistence().get(Scan.class, assetTypeID));
+    // LOGGER.info(new HibernatePersistence().get(Scan.class, assetTypeID));
     return new HibernatePersistence().get(Scan.class, assetTypeID).orElse(null);
   }
 

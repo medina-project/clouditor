@@ -27,6 +27,7 @@
 
 package io.clouditor.credentials;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -34,13 +35,13 @@ import io.clouditor.data_access_layer.PersistentObject;
 import io.clouditor.discovery.Scan;
 import io.clouditor.util.Collection;
 import java.io.IOException;
+import java.util.Set;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
-import javax.persistence.JoinColumn;
-import javax.persistence.OneToOne;
+import javax.persistence.OneToMany;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -75,17 +76,17 @@ public abstract class CloudAccount<T> implements PersistentObject<String> {
     this.provider = provider;
   }
 
-  public Scan getScan() {
-    return scan;
+  public Set<Scan> getScans() {
+    return scans;
   }
 
-  public void setScan(Scan scan) {
-    this.scan = scan;
+  public void setScans(Set<Scan> scans) {
+    this.scans = scans;
   }
 
-  @OneToOne(targetEntity = Scan.class)
-  @JoinColumn
-  Scan scan;
+
+  @OneToMany(mappedBy = "cloudAccount")
+  Set<Scan> scans;
 
   @Column protected String provider;
 

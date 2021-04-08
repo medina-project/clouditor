@@ -164,7 +164,7 @@ public class AwsAccount extends CloudAccount<AwsCredentials>
         .append("region", region)
         .append("accountId", accountId)
         .append("user", user)
-        .append("scan", scan)
+        .append("scan", scans)
         .toString();
   }
 
