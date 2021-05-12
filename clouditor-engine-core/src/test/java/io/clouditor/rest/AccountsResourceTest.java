@@ -1,6 +1,7 @@
 package io.clouditor.rest;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -12,9 +13,10 @@ import io.clouditor.credentials.CloudAccount;
 import io.clouditor.credentials.MockCloudAccount;
 import io.clouditor.data_access_layer.HibernatePersistence;
 import io.clouditor.discovery.DiscoveryService;
-import io.clouditor.discovery.Scan;
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Response;
@@ -184,7 +186,7 @@ class AccountsResourceTest extends JerseyTest {
   }
 
   @Test
-  void testPutAccount() {
+  void testPutAccountWhenAccountAddedSuccessfullyThenStatus204AndAccountInDB() {
     var response =
         target(accountsPrefix + "AWS")
             .request()
@@ -195,11 +197,17 @@ class AccountsResourceTest extends JerseyTest {
 
     assertEquals(Status.NO_CONTENT.getStatusCode(), response.getStatus());
 
-    System.out.println(new HibernatePersistence().listAll(Scan.class));
+    var cloudAccounts = new HibernatePersistence().listAll(CloudAccount.class);
+    // Collect accounts with default id of MockCloudAccount instances
+    List<CloudAccount> collect =
+        cloudAccounts.stream()
+            .filter(cloudAccount -> cloudAccount.getId().equals(new MockCloudAccount().getId()))
+            .collect(Collectors.toList());
+    assertFalse(collect.isEmpty());
   }
 
   @Test
-  void testPutAccountWhenProviderIsNotExistentThenStatus400() {
+  void testPutAccountWhenIdIsEmptyThenValidatingFailsAndStatus400() {
     var objectMapper = new ObjectMapper();
     ObjectNode requestBody = objectMapper.createObjectNode();
     requestBody.put("myId", "");
