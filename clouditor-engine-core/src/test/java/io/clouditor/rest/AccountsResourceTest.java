@@ -1,13 +1,17 @@
 package io.clouditor.rest;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.clouditor.Engine;
 import io.clouditor.credentials.AccountService;
 import io.clouditor.credentials.CloudAccount;
 import io.clouditor.data_access_layer.HibernatePersistence;
 import io.clouditor.discovery.DiscoveryService;
+import io.clouditor.discovery.Scan;
 import java.io.IOException;
 import java.util.Map;
 import javax.persistence.Entity;
@@ -182,52 +186,31 @@ class AccountsResourceTest extends JerseyTest {
     Assertions.assertEquals(Response.Status.NOT_FOUND.getStatusCode(), response.getStatus());
   }
 
-  //  @Disabled(
-  //      "ToDo: Cover at least some lines in method putAccount: The method seems to not accept the
-  // "
-  //          + "CloudAccount object")
   @Test
   void testPutAccount() {
-    // Create Account
-    CloudAccount mockCloudAccount = new MockCloudAccount();
-    mockCloudAccount.setAccountId("IdXYZ");
-    mockCloudAccount.setAutoDiscovered(false);
-    mockCloudAccount.setUser("UserXYZ");
-    AccountService accountService = engine.getService(AccountService.class);
-    try {
-      accountService.addAccount("AWS", mockCloudAccount);
-    } catch (IOException e) {
-      e.printStackTrace();
-    }
+    var objectMapper = new ObjectMapper();
+    ObjectNode requestBody = objectMapper.createObjectNode();
+    requestBody.put("myId", "AWS_2");
+    requestBody.put("provider", "AWS");
+    requestBody.put("autoDiscovered", false);
+    //    requestBody.put("accessKeyId", System.getenv("ACCESS_KEY"));
+    //    requestBody.put("secret", System.getenv("SECRET"));
+    //    requestBody.put("region", "us-east-2");
+    //    requestBody.put("isAuditorAccount", "true");
+    //    requestBody.put("isAssuming", "true");
+    //    requestBody.put("roleArn", System.getenv("ROLE_ARN"));
 
-    // Request with account and provider as PathParam
     var response =
         target(accountsPrefix + "AWS")
             .request()
             .header(
                 AuthenticationFilter.HEADER_AUTHORIZATION,
                 AuthenticationFilter.createAuthorization(token))
-            .put(javax.ws.rs.client.Entity.json(mockCloudAccount));
+            .put(javax.ws.rs.client.Entity.json(requestBody));
 
-    Assertions.assertEquals(Status.NO_CONTENT.getStatusCode(), response.getStatus());
-    System.out.println("Accounts: " + accountService.getAccounts());
+    assertEquals(Status.NO_CONTENT.getStatusCode(), response.getStatus());
 
-    // Request with account and provider as PathParam
-    CloudAccount mockCloudAccount2 = new MockCloudAccount();
-    mockCloudAccount2.setAccountId("IdXYZ");
-    mockCloudAccount2.setAutoDiscovered(false);
-    mockCloudAccount2.setUser("UserXYZ");
-    target(accountsPrefix + "AWS")
-        .request()
-        .header(
-            AuthenticationFilter.HEADER_AUTHORIZATION,
-            AuthenticationFilter.createAuthorization(token))
-        .put(javax.ws.rs.client.Entity.json(mockCloudAccount2));
-
-    System.out.println("Accounts via CloudAccount (AccService): " + accountService.getAccounts());
-    System.out.println(
-        "Accounts via MockAccount (Hibernate): "
-            + new HibernatePersistence().listAll(MockCloudAccount.class));
+    System.out.println(new HibernatePersistence().listAll(Scan.class));
   }
 
   /* Helper classes and methods */
@@ -244,6 +227,22 @@ class AccountsResourceTest extends JerseyTest {
     @Override
     public Object resolveCredentials() {
       return null;
+    }
+  }
+
+  @Table(name = "aws_account")
+  @Entity(name = "aws_account")
+  @JsonTypeName(value = "AWS")
+  private static class AwsAccount extends CloudAccount<String> {
+
+    @Override
+    public void validate() {
+      System.out.println("Mock Cloud Account validated.");
+    }
+
+    @Override
+    public String resolveCredentials() {
+      return "null";
     }
   }
 }

@@ -27,7 +27,6 @@
 
 package io.clouditor.discovery;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.clouditor.credentials.CloudAccount;
 import io.clouditor.data_access_layer.PersistentObject;
@@ -61,6 +60,13 @@ public class Scan implements PersistentObject<String> {
    * ScannerInfo}.
    */
   @Id @JsonProperty private String assetType;
+
+  // ToDo: Do we even need the manyToOne annotation? What is when we only set the account id at the
+  // set up and then use hibernate for getting credentials?
+  /** ToDo: Write out comment */
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "cloudaccount_id")
+  private CloudAccount account;
 
   /**
    * The group, or cloud provider this scan is belonging to.This is automatically parsed from the
@@ -100,17 +106,13 @@ public class Scan implements PersistentObject<String> {
   @JoinColumn(name = "last_result")
   private DiscoveryResult lastResult;
 
-  public CloudAccount getCloudAccount() {
-    return cloudAccount;
+  public CloudAccount getAccount() {
+    return account;
   }
 
-  public void setCloudAccount(CloudAccount cloudAccount) {
-    this.cloudAccount = cloudAccount;
+  public void setAccount(CloudAccount account) {
+    this.account = account;
   }
-
-  // ToDo: Is it really many to one?
-  @ManyToOne(cascade = CascadeType.ALL)
-  CloudAccount cloudAccount;
 
   @Column(name = "enabled")
   private boolean enabled;
@@ -215,7 +217,7 @@ public class Scan implements PersistentObject<String> {
         .append("lastResult", lastResult)
         .append("enabled", enabled)
         .append("interval", interval)
-        .append("Corresponding Cloud Account", cloudAccount)
+        .append("Corresponding Cloud Account", account.getId())
         .toString();
   }
 

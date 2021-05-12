@@ -40,6 +40,7 @@ import software.amazon.awssdk.auth.credentials.AwsCredentials;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
 import software.amazon.awssdk.core.exception.SdkClientException;
+import software.amazon.awssdk.http.urlconnection.UrlConnectionHttpClient;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.sts.StsClient;
 import software.amazon.awssdk.services.sts.model.StsException;
@@ -76,6 +77,8 @@ public class AwsAccount extends CloudAccount<AwsCredentials>
       if (!this.isAutoDiscovered()) {
         builder.region(Region.of(this.region));
         builder.credentialsProvider(() -> this);
+        // ToDo: With addition of this line, it now works. But why? It worked before?
+        builder.httpClient(UrlConnectionHttpClient.builder().build());
       }
 
       var stsClient = builder.build();
@@ -164,7 +167,7 @@ public class AwsAccount extends CloudAccount<AwsCredentials>
         .append("region", region)
         .append("accountId", accountId)
         .append("user", user)
-        .append("scan", scans)
+        .append("scan", getScans())
         .toString();
   }
 

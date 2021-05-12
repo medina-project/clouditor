@@ -72,7 +72,7 @@ public abstract class Scanner<C, T> {
     this.nameGenerator = nameGenerator;
   }
 
-  public void init() throws IOException {
+  public void init(String assetType) throws IOException {
     if (this.supplier != null) {
       this.api = supplier.get();
     }
@@ -81,14 +81,14 @@ public abstract class Scanner<C, T> {
   protected abstract List<T> list() throws ScanException;
 
   @JsonIgnore
-  public DiscoveryResult scan(String scanId) {
-    var result = new DiscoveryResult(scanId);
+  public DiscoveryResult scan(String assetType) {
+    var result = new DiscoveryResult(assetType);
 
     try {
 
       // initialize the scanner, if not done already
       if (!this.initialized) {
-        this.init();
+        this.init(assetType);
 
         // we need to set that here and not within init() because a lot of scanners overwrite
         // init()

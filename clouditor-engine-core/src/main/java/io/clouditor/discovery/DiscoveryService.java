@@ -72,6 +72,7 @@ public class DiscoveryService {
     LOGGER.info("Initializing {}", this.getClass().getSimpleName());
   }
 
+  // ToDo: Remove this method. Only initialize for new cloud accounts (see next method)
   public void init() {
     LOGGER.info(
         "{}:{} -> Initializing scans",
@@ -111,7 +112,8 @@ public class DiscoveryService {
         var scan = Scan.fromScanner(clazz);
 
         // update database
-        hibernatePersistence.saveOrUpdate(scan);
+        // Scans only with corresponding CloudAccount !
+        //        hibernatePersistence.saveOrUpdate(scan);
       }
     }
     LOGGER.info("Scans in DB: {}", new HibernatePersistence().listAll(Scan.class));
@@ -149,7 +151,6 @@ public class DiscoveryService {
     //    }
 
     // loop through all Scanner classes, to make sure a Scan object exists for each class
-    Set<Scan> scans = new HashSet<>();
     for (var clazz : classes) {
       //      var hasNoScannerForClass =
       //          hibernatePersistence.listAll(Scan.class).stream()
@@ -158,19 +159,17 @@ public class DiscoveryService {
       //      if (hasNoScannerForClass) {
       // create new scanner object
       var scan = Scan.fromScanner(clazz);
-      scan.setCloudAccount(cloudAccount);
+      cloudAccount.addScan(scan);
 
-      // add scan to set of scans for cloudAccount
-      scans.add(scan);
-
-      // update database
-      hibernatePersistence.saveOrUpdate(scan);
+      // ToDo: Check: Don't need to update database for each scan due to Cascading of scans
+      // hibernatePersistence.saveOrUpdate(scan);
       //      }
     }
-    LOGGER.info("Scans in DB: {}", new HibernatePersistence().listAll(Scan.class));
+    LOGGER.info(
+        "Scans in DB: {} (Should be empty due to cascading)",
+        new HibernatePersistence().listAll(Scan.class));
     LOGGER.info("Finished initializing scans.");
 
-    cloudAccount.setScans(scans);
     return cloudAccount;
   }
 

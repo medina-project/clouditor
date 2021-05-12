@@ -93,14 +93,14 @@ public class AccountsResource {
   @Consumes(MediaType.APPLICATION_JSON)
   @Path("{provider}")
   public void putAccount(@PathParam("provider") String provider, CloudAccount account) {
-    LOGGER.info("AccountsResource: Add account for provider {}", provider);
+    LOGGER.info("Add account {} for provider {}", account.getId(), provider);
 
     provider = sanitize(provider);
 
     try {
       this.service.addAccounts(provider, account, System.getenv("ROLE_ARN"));
     } catch (IOException ex) {
-      LOGGER.info("Something went wrong while trying to add the account");
+      LOGGER.info("Something went wrong while trying to add the account:\n{}", ex);
       throw new BadRequestException(
           Response.status(Status.BAD_REQUEST).entity(ex.getMessage()).build());
     }

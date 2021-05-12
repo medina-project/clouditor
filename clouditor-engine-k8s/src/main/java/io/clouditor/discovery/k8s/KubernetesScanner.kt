@@ -31,8 +31,8 @@ abstract class KubernetesScanner<T>(idGenerator: Function<T, String>?, nameGener
     Scanner<CoreV1Api?, T>(null, idGenerator, nameGenerator) {
 
     @Throws(IOException::class)
-    override fun init() {
-        super.init()
+    override fun init(assetType: String?) {
+        super.init(assetType)
 
         MAPPER.addMixIn(V1Probe::class.java, MixInIgnore::class.java)
         // TODO: provide a custom serializer for this instead of ignoring it

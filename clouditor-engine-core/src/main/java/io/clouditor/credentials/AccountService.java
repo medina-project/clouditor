@@ -117,6 +117,7 @@ public class AccountService {
     }
   }
 
+  // ToDo: Remove Logger.info's that are used for debugging
   public void addAccounts(String provider, CloudAccount account, String role_arn)
       throws IOException {
     LOGGER.info("Trying to validate auditor account for provider {}...", provider);
@@ -128,7 +129,8 @@ public class AccountService {
 
     account = discoveryService.initScansForNewAccount(account);
     new HibernatePersistence().saveOrUpdate(account);
-
+    LOGGER.info("Added account: {}", account.getId());
+    LOGGER.info("And initialized scans: {}", account.getScans());
     LOGGER.info(
         "Added account: {}", new HibernatePersistence().get(CloudAccount.class, account.getId()));
 

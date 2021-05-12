@@ -27,7 +27,6 @@
 
 package io.clouditor.credentials;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -35,13 +34,17 @@ import io.clouditor.data_access_layer.PersistentObject;
 import io.clouditor.discovery.Scan;
 import io.clouditor.util.Collection;
 import java.io.IOException;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
 import javax.persistence.OneToMany;
+import org.hibernate.annotations.Cascade;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,31 +65,12 @@ public abstract class CloudAccount<T> implements PersistentObject<String> {
   @Column(name = "cloud_user")
   protected String user;
 
-  public void setId(String id) {
-    this.myId = id;
-  }
-
   @Column @Id @JsonProperty protected String myId;
 
-  public String getProvider() {
-    return provider;
-  }
-
-  public void setProvider(String provider) {
-    this.provider = provider;
-  }
-
-  public Set<Scan> getScans() {
-    return scans;
-  }
-
-  public void setScans(Set<Scan> scans) {
-    this.scans = scans;
-  }
-
-
-  @OneToMany(mappedBy = "cloudAccount")
-  Set<Scan> scans;
+  /** ToDo: Write out comment */
+  @OneToMany(mappedBy = "account", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+  @Cascade(org.hibernate.annotations.CascadeType.SAVE_UPDATE)
+  private List<Scan> scans;
 
   @Column protected String provider;
 
@@ -102,6 +86,37 @@ public abstract class CloudAccount<T> implements PersistentObject<String> {
     var typeName = this.getClass().getAnnotation(JsonTypeName.class);
 
     this.provider = typeName != null ? typeName.value() : null;
+  }
+
+  public String getProvider() {
+    return provider;
+  }
+
+  public void setProvider(String provider) {
+    this.provider = provider;
+  }
+
+  public List<Scan> getScans() {
+    return scans;
+  }
+
+  public void setScans(List<Scan> scans) {
+    this.scans = scans;
+  }
+
+  // Convenience add method for bi-directional relationship
+  public void addScan(Scan scan) {
+    if (scans == null) {
+      scans = new ArrayList<>();
+    }
+    scans.add(scan);
+    scan.setAccount(this);
+  }
+
+  // Convenience remove method for bi-directional relationship
+  public void removeScan(Scan scan) {
+    scans.remove(scan);
+    scan.setAccount(null);
   }
 
   public String getAccountId() {
@@ -130,6 +145,10 @@ public abstract class CloudAccount<T> implements PersistentObject<String> {
 
   public String getId() {
     return this.myId;
+  }
+
+  public void setId(String id) {
+    this.myId = id;
   }
 
   /**

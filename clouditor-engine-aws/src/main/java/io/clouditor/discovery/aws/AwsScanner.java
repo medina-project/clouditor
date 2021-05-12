@@ -31,6 +31,7 @@ import io.clouditor.credentials.AwsAccount;
 import io.clouditor.data_access_layer.HibernatePersistence;
 import io.clouditor.discovery.Asset;
 import io.clouditor.discovery.AssetProperties;
+import io.clouditor.discovery.Scan;
 import io.clouditor.discovery.Scanner;
 import java.io.IOException;
 import java.util.List;
@@ -147,16 +148,19 @@ public abstract class AwsScanner<
   }
 
   @Override
-  public void init() throws IOException {
-    super.init();
+  public void init(String assetType) throws IOException {
+    super.init(assetType);
 
     var builder = this.builderSupplier.get();
 
-    // ToDo: Currently, PK is hardcoded but should get it from DB and loop? through all
     LOGGER.info("Get Account from DB");
+    // ToDo #1: Find the credentials by finding accountId -> We have to get a scan, not just asset
+    // type since it has no composite primary keys
+    var scans = new HibernatePersistence().listAll(Scan.class);
+    String cloudAccountId = "ToDo";
     var account =
         new HibernatePersistence()
-            .get(AwsAccount.class, "AWS_1")
+            .get(AwsAccount.class, cloudAccountId)
             .orElseThrow(() -> SdkClientException.create("AWS account not configured"));
 
     // TODO: find a generic way to find which client is global

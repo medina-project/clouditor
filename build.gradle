@@ -147,7 +147,7 @@ allprojects {
     }
 
     test {
-        // ToDo: Set to true when finished with this branch
+        // ToDo: Set to true when finished adding this feature
         failFast = false
         // Uncomment next line when you want to see each individual test while debugging
         // beforeTest { descriptor -> logger.lifecycle("Running test: ${descriptor}")}

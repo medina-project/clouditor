@@ -55,8 +55,8 @@ public abstract class AzureScanner<T extends HasInner> extends Scanner<AzureClie
   }
 
   @Override
-  public void init() throws IOException {
-    super.init();
+  public void init(String assetType) throws IOException {
+    super.init(assetType);
 
     MAPPER.addMixIn(com.microsoft.azure.SubResource.class, MixInIgnore.class);
 
