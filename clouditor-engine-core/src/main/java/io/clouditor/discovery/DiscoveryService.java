@@ -165,9 +165,6 @@ public class DiscoveryService {
       // hibernatePersistence.saveOrUpdate(scan);
       //      }
     }
-    LOGGER.info(
-        "Scans in DB: {} (Should be empty due to cascading)",
-        new HibernatePersistence().listAll(Scan.class));
     LOGGER.info("Finished initializing scans.");
 
     return cloudAccount;

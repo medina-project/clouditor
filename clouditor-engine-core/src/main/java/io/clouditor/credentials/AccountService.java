@@ -29,9 +29,11 @@ package io.clouditor.credentials;
 
 import io.clouditor.data_access_layer.HibernatePersistence;
 import io.clouditor.discovery.DiscoveryService;
+import io.clouditor.discovery.Scan;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -129,13 +131,14 @@ public class AccountService {
 
     account = discoveryService.initScansForNewAccount(account);
     new HibernatePersistence().saveOrUpdate(account);
-    LOGGER.info("Added account: {}", account.getId());
-    LOGGER.info("And initialized scans: {}", account.getScans());
+    List<Scan> scans = account.getScans();
     LOGGER.info(
-        "Added account: {}", new HibernatePersistence().get(CloudAccount.class, account.getId()));
+        "Added account '{}' with the following associated scans: {}",
+        account.getId(),
+        scans.stream().map(scan -> scan.getId()).collect(Collectors.toList()));
 
     LOGGER.info(
-        "Current IDs of CLoud Accounts: {}",
+        "Current cLoud accounts (IDs): {}",
         new HibernatePersistence()
             .listAll(CloudAccount.class).stream()
                 .map(CloudAccount::getId)

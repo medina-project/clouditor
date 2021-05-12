@@ -2,20 +2,19 @@ package io.clouditor.rest;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.clouditor.Engine;
 import io.clouditor.credentials.AccountService;
 import io.clouditor.credentials.CloudAccount;
+import io.clouditor.credentials.MockCloudAccount;
 import io.clouditor.data_access_layer.HibernatePersistence;
 import io.clouditor.discovery.DiscoveryService;
 import io.clouditor.discovery.Scan;
 import java.io.IOException;
 import java.util.Map;
-import javax.persistence.Entity;
-import javax.persistence.Table;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Response;
@@ -24,10 +23,13 @@ import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.TestProperties;
 import org.junit.jupiter.api.*;
 
+// ToDo: Add removeAccounts method, to clean up accounts after each tests -> No ordering needed
+// ToDo: Cover discover method
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class AccountsResourceTest extends JerseyTest {
 
   private static final Engine engine = new Engine();
+  private final String MOCK = "MOCK";
   private String token;
   private static final String accountsPrefix = "/accounts/";
 
@@ -70,7 +72,6 @@ class AccountsResourceTest extends JerseyTest {
   }
 
   /* Tests */
-  @Disabled
   @Test
   @Order(1)
   void testGetAccountsWhenNoAccountsAvailableThenStatusOkAndResponseEmpty() {
@@ -93,10 +94,9 @@ class AccountsResourceTest extends JerseyTest {
   void testGetAccountsWhenOneAccountAvailableThenRespondWithAccount() {
     // Create and add new mock account
     AccountService accService = engine.getService(AccountService.class);
-    CloudAccount mockCloudAccount = new MockCloudAccount();
-    String provider = "Mock Provider";
+    CloudAccount<String> mockCloudAccount = new MockCloudAccount();
     try {
-      accService.addAccount(provider, mockCloudAccount);
+      accService.addAccount(MOCK, mockCloudAccount);
     } catch (IOException e) {
       e.printStackTrace();
     }
@@ -113,9 +113,7 @@ class AccountsResourceTest extends JerseyTest {
     // Assertions
     Assertions.assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
     Map<?, Map> accounts = response.readEntity(Map.class);
-    Assertions.assertEquals(mockCloudAccount.getId(), accounts.get("Mock Cloud").get("_id"));
-    Assertions.assertEquals(
-        mockCloudAccount.isAutoDiscovered(), accounts.get("Mock Cloud").get("autoDiscovered"));
+    assertTrue(accounts.containsKey(mockCloudAccount.getId()));
   }
 
   @Test
@@ -149,16 +147,15 @@ class AccountsResourceTest extends JerseyTest {
     // Create account
     AccountService accService = engine.getService(AccountService.class);
     CloudAccount mockCloudAccount = new MockCloudAccount();
-    String provider = "Mock Provider";
     try {
-      accService.addAccount(provider, mockCloudAccount);
+      accService.addAccount(MOCK, mockCloudAccount);
     } catch (IOException e) {
       e.printStackTrace();
     }
 
     // Request
     var response =
-        target(accountsPrefix + "Mock Cloud")
+        target(accountsPrefix + mockCloudAccount.getId())
             .request()
             .header(
                 AuthenticationFilter.HEADER_AUTHORIZATION,
@@ -188,61 +185,35 @@ class AccountsResourceTest extends JerseyTest {
 
   @Test
   void testPutAccount() {
-    var objectMapper = new ObjectMapper();
-    ObjectNode requestBody = objectMapper.createObjectNode();
-    requestBody.put("myId", "AWS_2");
-    requestBody.put("provider", "AWS");
-    requestBody.put("autoDiscovered", false);
-    //    requestBody.put("accessKeyId", System.getenv("ACCESS_KEY"));
-    //    requestBody.put("secret", System.getenv("SECRET"));
-    //    requestBody.put("region", "us-east-2");
-    //    requestBody.put("isAuditorAccount", "true");
-    //    requestBody.put("isAssuming", "true");
-    //    requestBody.put("roleArn", System.getenv("ROLE_ARN"));
-
     var response =
         target(accountsPrefix + "AWS")
             .request()
             .header(
                 AuthenticationFilter.HEADER_AUTHORIZATION,
                 AuthenticationFilter.createAuthorization(token))
-            .put(javax.ws.rs.client.Entity.json(requestBody));
+            .put(javax.ws.rs.client.Entity.json(new MockCloudAccount()));
 
     assertEquals(Status.NO_CONTENT.getStatusCode(), response.getStatus());
 
     System.out.println(new HibernatePersistence().listAll(Scan.class));
   }
 
-  /* Helper classes and methods */
-  @Table(name = "mock_account")
-  @Entity(name = "mock_account")
-  @JsonTypeName(value = "Mock Cloud")
-  private static class MockCloudAccount extends CloudAccount {
+  @Test
+  void testPutAccountWhenProviderIsNotExistentThenStatus400() {
+    var objectMapper = new ObjectMapper();
+    ObjectNode requestBody = objectMapper.createObjectNode();
+    requestBody.put("myId", "");
+    requestBody.put("provider", MOCK);
+    requestBody.put("autoDiscovered", false);
 
-    @Override
-    public void validate() {
-      System.out.println("Mock Cloud Account validated.");
-    }
+    var response =
+        target(accountsPrefix + MOCK)
+            .request()
+            .header(
+                AuthenticationFilter.HEADER_AUTHORIZATION,
+                AuthenticationFilter.createAuthorization(token))
+            .put(javax.ws.rs.client.Entity.json(requestBody));
 
-    @Override
-    public Object resolveCredentials() {
-      return null;
-    }
-  }
-
-  @Table(name = "aws_account")
-  @Entity(name = "aws_account")
-  @JsonTypeName(value = "AWS")
-  private static class AwsAccount extends CloudAccount<String> {
-
-    @Override
-    public void validate() {
-      System.out.println("Mock Cloud Account validated.");
-    }
-
-    @Override
-    public String resolveCredentials() {
-      return "null";
-    }
+    assertEquals(Status.BAD_REQUEST.getStatusCode(), response.getStatus());
   }
 }
