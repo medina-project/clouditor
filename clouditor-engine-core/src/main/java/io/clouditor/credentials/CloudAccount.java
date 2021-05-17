@@ -27,9 +27,11 @@
 
 package io.clouditor.credentials;
 
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import io.clouditor.data_access_layer.PersistentObject;
 import io.clouditor.discovery.Scan;
 import io.clouditor.util.Collection;
@@ -50,6 +52,7 @@ import org.slf4j.LoggerFactory;
 
 @Entity(name = "cloud_account")
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "provider")
+@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "myId")
 @Collection("accounts")
 @Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
 public abstract class CloudAccount<T> implements PersistentObject<String> {
@@ -68,7 +71,12 @@ public abstract class CloudAccount<T> implements PersistentObject<String> {
   @Column @Id @JsonProperty protected String myId;
 
   /** ToDo: Write out comment */
-  @OneToMany(mappedBy = "account", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+  //  @JsonManagedReference
+  @OneToMany(
+      mappedBy = "account",
+      targetEntity = Scan.class,
+      fetch = FetchType.LAZY,
+      cascade = CascadeType.ALL)
   @Cascade(org.hibernate.annotations.CascadeType.SAVE_UPDATE)
   private List<Scan> scans;
 

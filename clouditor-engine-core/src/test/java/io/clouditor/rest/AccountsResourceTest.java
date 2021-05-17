@@ -13,6 +13,7 @@ import io.clouditor.credentials.CloudAccount;
 import io.clouditor.credentials.MockCloudAccount;
 import io.clouditor.data_access_layer.HibernatePersistence;
 import io.clouditor.discovery.DiscoveryService;
+import io.clouditor.discovery.Scan;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -204,6 +205,53 @@ class AccountsResourceTest extends JerseyTest {
             .filter(cloudAccount -> cloudAccount.getId().equals(new MockCloudAccount().getId()))
             .collect(Collectors.toList());
     assertFalse(collect.isEmpty());
+  }
+
+  @Test
+  void testPutAccountWhenTwoAccountsAddedSuccessfullyThenStatus204AndAccountsInDB() {
+    var response =
+        target(accountsPrefix + "AWS")
+            .request()
+            .header(
+                AuthenticationFilter.HEADER_AUTHORIZATION,
+                AuthenticationFilter.createAuthorization(token))
+            .put(javax.ws.rs.client.Entity.json(new MockCloudAccount()));
+
+    assertEquals(Status.NO_CONTENT.getStatusCode(), response.getStatus());
+
+    var cloudAccounts = new HibernatePersistence().listAll(CloudAccount.class);
+    // Collect accounts with default id of MockCloudAccount instances
+    List<CloudAccount> collect =
+        cloudAccounts.stream()
+            .filter(cloudAccount -> cloudAccount.getId().equals(new MockCloudAccount().getId()))
+            .collect(Collectors.toList());
+    assertFalse(collect.isEmpty());
+
+    // Add 2nd account
+    MockCloudAccount mockCloudAccount = new MockCloudAccount();
+    mockCloudAccount.setId("2nd-Mock-ACC");
+    var response2 =
+        target(accountsPrefix + "AWS")
+            .request()
+            .header(
+                AuthenticationFilter.HEADER_AUTHORIZATION,
+                AuthenticationFilter.createAuthorization(token))
+            .put(javax.ws.rs.client.Entity.json(mockCloudAccount));
+
+    assertEquals(Status.NO_CONTENT.getStatusCode(), response2.getStatus());
+
+    cloudAccounts = new HibernatePersistence().listAll(CloudAccount.class);
+    // Collect accounts with default id of MockCloudAccount instances
+    collect =
+        cloudAccounts.stream()
+            .filter(cloudAccount -> cloudAccount.getId().equals(new MockCloudAccount().getId()))
+            .collect(Collectors.toList());
+    assertFalse(collect.isEmpty());
+
+    System.out.println(new HibernatePersistence().listAll(Scan.class));
+    List<CloudAccount> accounts = new HibernatePersistence().listAll(CloudAccount.class);
+    System.out.println("Account 1 Scans: " + accounts.get(0).getScans());
+    System.out.println("Account 2 Scans: " + accounts.get(1).getScans());
   }
 
   @Test

@@ -27,7 +27,9 @@
 
 package io.clouditor.discovery;
 
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import io.clouditor.credentials.CloudAccount;
 import io.clouditor.data_access_layer.PersistentObject;
 import java.lang.reflect.InvocationTargetException;
@@ -42,6 +44,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
  */
 @Entity(name = "scan")
 @Table(name = "scan")
+@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "assetType")
 public class Scan implements PersistentObject<String> {
 
   static final String FIELD_SCANNER_CLASS = "scannerClass";
@@ -64,7 +67,11 @@ public class Scan implements PersistentObject<String> {
   // ToDo: Do we even need the manyToOne annotation? What is when we only set the account id at the
   // set up and then use hibernate for getting credentials?
   /** ToDo: Write out comment */
-  @ManyToOne(fetch = FetchType.LAZY)
+  // ToDo: Test if FetchType Lazy is possible (since it is composite id, it may has to be EAGER)
+  //  @Id
+  //  @JsonBackReference
+
+  @ManyToOne(fetch = FetchType.EAGER)
   @JoinColumn(name = "cloudaccount_id")
   private CloudAccount account;
 

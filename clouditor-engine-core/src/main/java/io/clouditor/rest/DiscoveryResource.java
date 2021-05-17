@@ -54,12 +54,14 @@ public class DiscoveryResource {
     this.service = service;
   }
 
+  // ToDo: Check if we have to change this method as well
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   public List<Scan> getScans() {
     return new ArrayList<>(this.service.getScans().values());
   }
 
+  // ToDo: Scan ID is now a composite prim key of asset id AND CloudAccount
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   @Path("{id}")
@@ -69,6 +71,7 @@ public class DiscoveryResource {
     return this.service.getScan(id);
   }
 
+  // ToDo: Scan ID is now a composite prim key of asset id AND CloudAccount
   @POST
   @Path("{id}/enable")
   public void enable(@PathParam("id") String id) {
@@ -84,6 +87,7 @@ public class DiscoveryResource {
     service.enableScan(scan);
   }
 
+  // ToDo: Scan ID is now a composite prim key of asset id AND CloudAccount
   @POST
   @Path("{id}/disable")
   public void disable(@PathParam("id") String id) {

@@ -1,8 +1,11 @@
 package io.clouditor.rest;
 
 import io.clouditor.Engine;
+import io.clouditor.credentials.AccountService;
+import io.clouditor.credentials.MockCloudAccount;
 import io.clouditor.discovery.DiscoveryService;
 import io.clouditor.discovery.Scan;
+import java.io.IOException;
 import java.util.List;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.Application;
@@ -13,6 +16,7 @@ import org.junit.jupiter.api.*;
 
 class DiscoveryResourceTest extends JerseyTest {
   private static final Engine engine = new Engine();
+  private static final String FAKE_ACCOUNT_ID = "MOCK_ACCOUNT_1";
   private String token;
   private static final String targetPrefix = "/discovery/";
   private static final String FAKE_ID = "fake";
@@ -79,8 +83,40 @@ class DiscoveryResourceTest extends JerseyTest {
     Assertions.assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
   }
 
+  // ToDo: Remove after new test is successful
   @Test
   void testGetScanWhenRequestedScannerAvailableThenStatusOkAndRespondIt() {
+    // Request
+    var response =
+        target(targetPrefix + FAKE_ID)
+            .request()
+            .header(
+                AuthenticationFilter.HEADER_AUTHORIZATION,
+                AuthenticationFilter.createAuthorization(token))
+            .get();
+
+    // Assertions
+    System.out.println(discoveryService.getScanners());
+    System.out.println(discoveryService.getScans());
+    Assertions.assertNotNull(discoveryService.getScan(FAKE_ID));
+    Assertions.assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
+    Scan scan = response.readEntity(Scan.class);
+    Assertions.assertEquals(FAKE_ID, scan.getId());
+  }
+
+  // ToDo: Rename when test is successful and remove old test method
+  @Test
+  void testGetScanWhenRequestedScanAvailableThenStatusOkAndRespondIt_NEW() throws IOException {
+    // Preparation:
+    //    CloudAccount cloudAccount = discoveryService.initScansForNewAccount(new
+    // MockCloudAccount());
+    //    //    System.out.println(cloudAccount.getScans());
+    //    new HibernatePersistence().saveOrUpdate(cloudAccount);
+    engine
+        .getService(AccountService.class)
+        .addAccounts("Mock_Provider", new MockCloudAccount(), "MOCK_ROLE");
+
+    //    System.out.println(discoveryService.getScans());
     // Request
     var response =
         target(targetPrefix + FAKE_ID)
@@ -95,6 +131,7 @@ class DiscoveryResourceTest extends JerseyTest {
     Assertions.assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
     Scan scan = response.readEntity(Scan.class);
     Assertions.assertEquals(FAKE_ID, scan.getId());
+    System.out.println(scan);
   }
 
   @Test
